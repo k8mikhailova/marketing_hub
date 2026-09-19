@@ -1,0 +1,11 @@
+[theme]
+# Milestone 20 (UX correction pass): Streamlit's own default primaryColor
+# is red (#FF4B4B), which every `type="primary"` button across the app was
+# silently rendering in, clashing with the design system's own accent blue
+# (core/ui.py::ACCENT_COLOR, used for charts/badges/the card accent strip/
+# the progress indicator). Setting only primaryColor here, nothing else
+# (background/text/font stay Streamlit's own defaults, so light/dark mode
+# still follows the viewer's own OS/browser preference unchanged), makes
+# every native primary button match the rest of the product's one accent
+# color instead of two unrelated ones.
+primaryColor = "#2f6fed"

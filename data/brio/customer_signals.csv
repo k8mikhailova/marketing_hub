@@ -1,0 +1,241 @@
+signal_id,date,client_id,source,product_context,text,demo_theme_label,demo_intent_label,demo_sentiment_label,data_type
+brio_sig_027,2026-07-16,brio,Reddit,Q60 Countertop Dispenser,I want filtered water on demand instead of waiting for a pitcher.,Convenience & routine,consideration,neutral,demo_synthetic
+brio_sig_116,2026-07-16,brio,Customer Reviews,Reverse Osmosis Systems,My experience: I'm comparing TDS readings before and after RO filtration.,Technical filtration,consideration,neutral,demo_synthetic
+brio_sig_017,2026-07-17,brio,Reddit,Q60 Countertop Dispenser,Is a home filtration system actually cheaper than bottled water long term?,Bottled water frustration,problem_awareness,negative,demo_synthetic
+brio_sig_142,2026-07-17,brio,CRM Notes,Reverse Osmosis Systems,Prospect mentioned: how many stages of reverse osmosis are actually necessary?,Technical filtration,research,neutral,demo_synthetic
+brio_sig_042,2026-07-18,brio,Reddit,Reverse Osmosis Systems,Our water tastes metallic sometimes and it's making me avoid drinking it.,Taste & odor,research,negative,demo_synthetic
+brio_sig_050,2026-07-18,brio,Reddit,Reverse Osmosis Systems,I want cleaner water at home without obsessing over every technical detail.,Family & health reassurance,research,concerned,demo_synthetic
+brio_sig_100,2026-07-18,brio,Customer Reviews,Reverse Osmosis Systems,"Before buying, I want something with clear proof, not just marketing that says the water is cleaner.",Trust & water quality,problem_awareness,concerned,demo_synthetic
+brio_sig_192,2026-07-18,brio,Social Comments,Q60 Countertop Dispenser,Question — What are the ongoing costs after you buy the system?,Cost & value,research,neutral,demo_synthetic
+brio_sig_089,2026-07-19,brio,Customer Reviews,General / Brand,I want to stop buying water but I don't like the taste from our tap.,Bottled water frustration,research,negative,demo_synthetic
+brio_sig_206,2026-07-19,brio,Social Comments,Reverse Osmosis Systems,Anyone know? The installation is the part making me hesitate.,Installation & setup,research,concerned,demo_synthetic
+brio_sig_025,2026-07-20,brio,Reddit,Q60 Countertop Dispenser,We go through way too many plastic bottles and I want to stop buying them.,Bottled water frustration,research,negative,demo_synthetic
+brio_sig_037,2026-07-22,brio,Reddit,Reverse Osmosis Systems,There are so many filter claims that I don't know what to trust.,Trust & water quality,problem_awareness,concerned,demo_synthetic
+brio_sig_181,2026-07-22,brio,Social Comments,General / Brand,I'd love to get rid of the pile of empty bottles in our recycling.,Bottled water frustration,research,neutral,demo_synthetic
+brio_sig_190,2026-07-22,brio,Social Comments,Q60 Countertop Dispenser,Curious: I can always tell when a drink is made with our tap water because of the taste.,Taste & odor,research,negative,demo_synthetic
+brio_sig_013,2026-07-23,brio,Reddit,Reverse Osmosis Systems,I'm looking for something my parents could set up without calling someone.,Installation & setup,consideration,neutral,demo_synthetic
+brio_sig_022,2026-07-23,brio,Reddit,General / Brand,I want to feel better about the water coming out of our kitchen faucet.,Trust & water quality,research,concerned,demo_synthetic
+brio_sig_031,2026-07-23,brio,Reddit,Reverse Osmosis Systems,Does the system have a remineralization stage after RO?,Technical filtration,research,neutral,demo_synthetic
+brio_sig_193,2026-07-23,brio,Social Comments,Reverse Osmosis Systems,Anyone know? The biggest thing for me is taste. I don't want that tap-water smell anymore.,Taste & odor,research,neutral,demo_synthetic
+brio_sig_026,2026-07-24,brio,Reddit,Q60 Countertop Dispenser,I started looking into filtration because I want better water for the kids.,Family & health reassurance,research,concerned,demo_synthetic
+brio_sig_038,2026-07-24,brio,Reddit,Bottom Load Dispensers,Dragging water bottles upstairs every week is getting old.,Bottled water frustration,research,negative,demo_synthetic
+brio_sig_053,2026-07-24,brio,Reddit,General / Brand,"The water is technically drinkable, but the taste makes me not want it.",Taste & odor,research,negative,demo_synthetic
+brio_sig_076,2026-07-24,brio,Customer Reviews,Bottom Load Dispensers,I just want cold filtered water ready when I need it.,Convenience & routine,problem_awareness,neutral,demo_synthetic
+brio_sig_219,2026-07-24,brio,Search Queries,Q60 Countertop Dispenser,the biggest thing for me is taste i don't want that tap-water smell anymore,Taste & odor,problem_awareness,negative,demo_synthetic
+brio_sig_015,2026-07-25,brio,Reddit,Reverse Osmosis Systems,What should I look for if I'm worried about what's in my tap water?,Trust & water quality,problem_awareness,neutral,demo_synthetic
+brio_sig_018,2026-07-26,brio,Reddit,Reverse Osmosis Systems,Is a tankless reverse osmosis system better for a small kitchen?,Technical filtration,consideration,neutral,demo_synthetic
+brio_sig_020,2026-07-26,brio,Reddit,General / Brand,I started looking into filtration because I want better water for the kids.,Family & health reassurance,research,concerned,demo_synthetic
+brio_sig_048,2026-07-27,brio,Reddit,Reverse Osmosis Systems,Is reverse osmosis better than carbon filtration for tap water?,Technical filtration,consideration,neutral,demo_synthetic
+brio_sig_120,2026-07-27,brio,Customer Reviews,General / Brand,What mattered to me: Trying to make our everyday drinking water feel like a healthier choice.,Family & health reassurance,problem_awareness,neutral,demo_synthetic
+brio_sig_137,2026-07-27,brio,CRM Notes,Q60 Countertop Dispenser,Prospect mentioned: does anyone else notice a chlorine taste in their tap water?,Taste & odor,problem_awareness,negative,demo_synthetic
+brio_sig_174,2026-07-27,brio,Social Comments,General / Brand,Dragging water bottles upstairs every week is getting old.,Bottled water frustration,research,negative,demo_synthetic
+brio_sig_155,2026-07-28,brio,CRM Notes,Q60 Countertop Dispenser,Sales note: trying to replace our bottled-water habit with something easier.,Bottled water frustration,research,negative,demo_synthetic
+brio_sig_175,2026-07-28,brio,Social Comments,Q60 Countertop Dispenser,Does anyone else notice a chlorine taste in their tap water?,Taste & odor,research,negative,demo_synthetic
+brio_sig_063,2026-07-29,brio,Customer Reviews,Q60 Countertop Dispenser,Can this be installed without drilling into the counter?,Installation & setup,consideration,neutral,demo_synthetic
+brio_sig_128,2026-07-29,brio,CRM Notes,General / Brand,Customer question: do I need a plumber to install one of these?,Installation & setup,research,neutral,demo_synthetic
+brio_sig_227,2026-07-29,brio,Search Queries,General / Brand,i can always tell when a drink is made with our tap water because of the taste,Taste & odor,problem_awareness,negative,demo_synthetic
+brio_sig_060,2026-07-30,brio,Customer Reviews,Reverse Osmosis Systems,What mattered to me: I can always tell when a drink is made with our tap water because of the taste.,Taste & odor,problem_awareness,neutral,demo_synthetic
+brio_sig_135,2026-07-30,brio,CRM Notes,Reverse Osmosis Systems,"Sales note: i rent, so I can't make permanent changes under the sink.",Installation & setup,consideration,concerned,demo_synthetic
+brio_sig_146,2026-07-30,brio,CRM Notes,Reverse Osmosis Systems,Lead asked: my whole garage is basically bottled water storage at this point.,Bottled water frustration,research,negative,demo_synthetic
+brio_sig_161,2026-07-31,brio,CRM Notes,Q60 Countertop Dispenser,Main hesitation: looking for something that fits into the routine without extra work.,Convenience & routine,consideration,neutral,demo_synthetic
+brio_sig_203,2026-07-31,brio,Social Comments,Reverse Osmosis Systems,I keep seeing reports about contaminants and now I'm second guessing our water.,Trust & water quality,research,neutral,demo_synthetic
+brio_sig_055,2026-08-01,brio,Reddit,Reverse Osmosis Systems,What should I look for if I'm worried about what's in my tap water?,Trust & water quality,problem_awareness,neutral,demo_synthetic
+brio_sig_171,2026-08-01,brio,CRM Notes,Reverse Osmosis Systems,Prospect mentioned: is reverse osmosis better than carbon filtration for tap water?,Technical filtration,research,neutral,demo_synthetic
+brio_sig_231,2026-08-01,brio,Search Queries,General / Brand,how often do the filters need replacing and what does that cost,Cost & value,consideration,neutral,demo_synthetic
+brio_sig_034,2026-08-02,brio,Reddit,Q60 Countertop Dispenser,"Would a filter actually help with the smell and taste, or is that a plumbing issue?",Taste & odor,research,neutral,demo_synthetic
+brio_sig_019,2026-08-03,brio,Reddit,Q60 Countertop Dispenser,"Would a filter actually help with the smell and taste, or is that a plumbing issue?",Taste & odor,research,negative,demo_synthetic
+brio_sig_036,2026-08-03,brio,Reddit,Reverse Osmosis Systems,Looking for a filter for a family of four. What actually matters?,Family & health reassurance,problem_awareness,neutral,demo_synthetic
+brio_sig_049,2026-08-03,brio,Reddit,Reverse Osmosis Systems,I'm comparing TDS readings before and after RO filtration.,Technical filtration,research,neutral,demo_synthetic
+brio_sig_115,2026-08-03,brio,Customer Reviews,Reverse Osmosis Systems,What mattered to me: How often do the filters need replacing and what does that cost?,Cost & value,research,neutral,demo_synthetic
+brio_sig_189,2026-08-03,brio,Social Comments,Reverse Osmosis Systems,I care more about peace of mind than having a bunch of extra features.,Family & health reassurance,research,concerned,demo_synthetic
+brio_sig_198,2026-08-03,brio,Social Comments,General / Brand,I started looking into filtration because I want better water for the kids.,Family & health reassurance,problem_awareness,concerned,demo_synthetic
+brio_sig_073,2026-08-04,brio,Customer Reviews,Reverse Osmosis Systems,My experience: There are so many filter claims that I don't know what to trust.,Trust & water quality,research,neutral,demo_synthetic
+brio_sig_165,2026-08-04,brio,CRM Notes,Q60 Countertop Dispenser,"Main hesitation: would love one setup for drinking water, coffee, and filling bottles before work.",Convenience & routine,consideration,neutral,demo_synthetic
+brio_sig_191,2026-08-04,brio,Social Comments,Q60 Countertop Dispenser,Is a home filtration system actually cheaper than bottled water long term?,Bottled water frustration,problem_awareness,negative,demo_synthetic
+brio_sig_216,2026-08-04,brio,Search Queries,Reverse Osmosis Systems,the installation is the part making me hesitate,Installation & setup,consideration,concerned,demo_synthetic
+brio_sig_222,2026-08-04,brio,Search Queries,Reverse Osmosis Systems,i can always tell when a drink is made with our tap water because of the taste,Taste & odor,research,neutral,demo_synthetic
+brio_sig_043,2026-08-06,brio,Reddit,Reverse Osmosis Systems,"I want something with clear proof, not just marketing that says the water is cleaner.",Trust & water quality,research,neutral,demo_synthetic
+brio_sig_080,2026-08-06,brio,Customer Reviews,Reverse Osmosis Systems,"Before buying, Looking for a filter for a family of four. What actually matters?",Family & health reassurance,problem_awareness,neutral,demo_synthetic
+brio_sig_106,2026-08-06,brio,Customer Reviews,Reverse Osmosis Systems,We spend way more on bottled water than I realized.,Bottled water frustration,research,negative,demo_synthetic
+brio_sig_239,2026-08-07,brio,Search Queries,Q60 Countertop Dispenser,would you feel comfortable using filtered tap water for baby formula,Family & health reassurance,problem_awareness,neutral,demo_synthetic
+brio_sig_065,2026-08-08,brio,Customer Reviews,Q60 Countertop Dispenser,"The water is technically drinkable, but the taste makes me not want it.",Taste & odor,research,negative,demo_synthetic
+brio_sig_107,2026-08-08,brio,Customer Reviews,Reverse Osmosis Systems,My main concern is having water everyone in the family will actually drink.,Family & health reassurance,problem_awareness,neutral,demo_synthetic
+brio_sig_108,2026-08-08,brio,Customer Reviews,Q60 Countertop Dispenser,Does anyone else notice a chlorine taste in their tap water?,Taste & odor,problem_awareness,negative,demo_synthetic
+brio_sig_122,2026-08-08,brio,Customer Reviews,Reverse Osmosis Systems,Trying to make our everyday drinking water feel like a healthier choice.,Family & health reassurance,research,neutral,demo_synthetic
+brio_sig_182,2026-08-08,brio,Social Comments,Q60 Countertop Dispenser,Curious: The installation is the part making me hesitate.,Installation & setup,consideration,concerned,demo_synthetic
+brio_sig_229,2026-08-08,brio,Search Queries,Reverse Osmosis Systems,i keep seeing reports about contaminants and now i'm second guessing our water,Trust & water quality,research,neutral,demo_synthetic
+brio_sig_011,2026-08-10,brio,Reddit,Reverse Osmosis Systems,We go through way too many plastic bottles and I want to stop buying them.,Bottled water frustration,research,neutral,demo_synthetic
+brio_sig_021,2026-08-10,brio,Reddit,Reverse Osmosis Systems,I don't mind paying more if it lasts and the filters are easy to get.,Cost & value,research,neutral,demo_synthetic
+brio_sig_177,2026-08-10,brio,Social Comments,Q60 Countertop Dispenser,Curious: The biggest thing for me is taste. I don't want that tap-water smell anymore.,Taste & odor,research,neutral,demo_synthetic
+brio_sig_185,2026-08-10,brio,Social Comments,Reverse Osmosis Systems,I'm specifically looking for reverse osmosis because of dissolved contaminants.,Technical filtration,consideration,neutral,demo_synthetic
+brio_sig_232,2026-08-10,brio,Search Queries,General / Brand,i want cleaner-tasting water without having to keep bottles in the fridge,Taste & odor,problem_awareness,neutral,demo_synthetic
+brio_sig_238,2026-08-10,brio,Search Queries,Reverse Osmosis Systems,how can i tell whether a home filter is actually doing anything,Trust & water quality,research,neutral,demo_synthetic
+brio_sig_057,2026-08-11,brio,Reddit,Bottom Load Dispensers,Dragging water bottles upstairs every week is getting old.,Bottled water frustration,research,neutral,demo_synthetic
+brio_sig_121,2026-08-11,brio,Customer Reviews,Q60 Countertop Dispenser,"Before buying, The installation is the part making me hesitate.",Installation & setup,research,neutral,demo_synthetic
+brio_sig_173,2026-08-11,brio,Social Comments,Reverse Osmosis Systems,How often do the filters need replacing and what does that cost?,Cost & value,research,neutral,demo_synthetic
+brio_sig_199,2026-08-11,brio,Social Comments,General / Brand,Curious: Is there an easy way to understand what a filtration system actually removes?,Trust & water quality,research,concerned,demo_synthetic
+brio_sig_214,2026-08-11,brio,Social Comments,Reverse Osmosis Systems,Anyone know? Looking for a filter for a family of four. What actually matters?,Family & health reassurance,research,concerned,demo_synthetic
+brio_sig_068,2026-08-12,brio,Customer Reviews,General / Brand,My main concern is having water everyone in the family will actually drink.,Family & health reassurance,research,neutral,demo_synthetic
+brio_sig_131,2026-08-12,brio,CRM Notes,Reverse Osmosis Systems,Main hesitation: i can always tell when a drink is made with our tap water because of the taste.,Taste & odor,research,negative,demo_synthetic
+brio_sig_143,2026-08-12,brio,CRM Notes,Reverse Osmosis Systems,Customer question: which type of filter makes sense if your priority is everyday family drinking water?,Family & health reassurance,research,neutral,demo_synthetic
+brio_sig_176,2026-08-12,brio,Social Comments,Reverse Osmosis Systems,Question — I started looking into filtration because I want better water for the kids.,Family & health reassurance,research,neutral,demo_synthetic
+brio_sig_195,2026-08-12,brio,Social Comments,General / Brand,I'd rather buy once than keep replacing cheap pitchers.,Cost & value,consideration,neutral,demo_synthetic
+brio_sig_217,2026-08-12,brio,Search Queries,Reverse Osmosis Systems,i want something reliable enough that i don't have to keep thinking about our water,Family & health reassurance,problem_awareness,concerned,demo_synthetic
+brio_sig_003,2026-08-13,brio,Reddit,General / Brand,How do you actually know what's being removed from the water?,Trust & water quality,research,concerned,demo_synthetic
+brio_sig_010,2026-08-13,brio,Reddit,Reverse Osmosis Systems,How do you actually know what's being removed from the water?,Trust & water quality,research,neutral,demo_synthetic
+brio_sig_016,2026-08-13,brio,Reddit,General / Brand,Trying to figure out the real yearly cost before buying.,Cost & value,consideration,neutral,demo_synthetic
+brio_sig_024,2026-08-13,brio,Reddit,Reverse Osmosis Systems,I care more about peace of mind than having a bunch of extra features.,Family & health reassurance,problem_awareness,concerned,demo_synthetic
+brio_sig_039,2026-08-13,brio,Reddit,Reverse Osmosis Systems,Can this be installed without drilling into the counter?,Installation & setup,consideration,concerned,demo_synthetic
+brio_sig_088,2026-08-13,brio,Customer Reviews,Q60 Countertop Dispenser,I'm looking for something my parents could set up without calling someone.,Installation & setup,consideration,neutral,demo_synthetic
+brio_sig_159,2026-08-13,brio,CRM Notes,Q60 Countertop Dispenser,Lead asked: do I need a plumber to install one of these?,Installation & setup,consideration,concerned,demo_synthetic
+brio_sig_160,2026-08-13,brio,CRM Notes,General / Brand,Prospect mentioned: there are so many filter claims that I don't know what to trust.,Trust & water quality,problem_awareness,neutral,demo_synthetic
+brio_sig_061,2026-08-14,brio,Customer Reviews,Bottom Load Dispensers,My experience: What are people using instead of buying cases of water all the time?,Bottled water frustration,problem_awareness,negative,demo_synthetic
+brio_sig_093,2026-08-14,brio,Customer Reviews,Reverse Osmosis Systems,I want to feel better about the water coming out of our kitchen faucet.,Trust & water quality,research,neutral,demo_synthetic
+brio_sig_112,2026-08-14,brio,Customer Reviews,Q60 Countertop Dispenser,"Before buying, Can this be installed without drilling into the counter?",Installation & setup,research,concerned,demo_synthetic
+brio_sig_140,2026-08-14,brio,CRM Notes,Reverse Osmosis Systems,Customer question: trying to replace our bottled-water habit with something easier.,Bottled water frustration,research,negative,demo_synthetic
+brio_sig_170,2026-08-14,brio,CRM Notes,Reverse Osmosis Systems,"Lead asked: i don't need fancy water, I just want to feel confident drinking it every day.",Trust & water quality,research,neutral,demo_synthetic
+brio_sig_040,2026-08-15,brio,Reddit,Q60 Countertop Dispenser,"Would a filter actually help with the smell and taste, or is that a plumbing issue?",Taste & odor,research,negative,demo_synthetic
+brio_sig_095,2026-08-15,brio,Customer Reviews,Reverse Osmosis Systems,I can always tell when a drink is made with our tap water because of the taste.,Taste & odor,problem_awareness,negative,demo_synthetic
+brio_sig_103,2026-08-15,brio,Customer Reviews,Q60 Countertop Dispenser,"Before buying, I want better water, but I really don't want to mess with plumbing.",Installation & setup,research,concerned,demo_synthetic
+brio_sig_113,2026-08-15,brio,Customer Reviews,Reverse Osmosis Systems,What mattered to me: Is a home filtration system actually cheaper than bottled water long term?,Bottled water frustration,research,neutral,demo_synthetic
+brio_sig_157,2026-08-15,brio,CRM Notes,General / Brand,Prospect mentioned: we spend way more on bottled water than I realized.,Bottled water frustration,problem_awareness,negative,demo_synthetic
+brio_sig_005,2026-08-16,brio,Reddit,Q60 Countertop Dispenser,We go through way too many plastic bottles and I want to stop buying them.,Bottled water frustration,research,neutral,demo_synthetic
+brio_sig_180,2026-08-16,brio,Social Comments,Q60 Countertop Dispenser,Curious: I'm so tired of carrying cases of bottled water home every week.,Bottled water frustration,research,neutral,demo_synthetic
+brio_sig_001,2026-08-17,brio,Reddit,Reverse Osmosis Systems,Is there an easy way to understand what a filtration system actually removes?,Trust & water quality,research,concerned,demo_synthetic
+brio_sig_169,2026-08-17,brio,CRM Notes,General / Brand,Sales note: our current pitcher is always empty when someone wants water.,Convenience & routine,consideration,neutral,demo_synthetic
+brio_sig_215,2026-08-17,brio,Search Queries,Bottom Load Dispensers,i'm trying to make hydration less of a chore,Convenience & routine,consideration,neutral,demo_synthetic
+brio_sig_233,2026-08-17,brio,Search Queries,Q60 Countertop Dispenser,does the more expensive system actually make a noticeable difference,Cost & value,research,neutral,demo_synthetic
+brio_sig_007,2026-08-18,brio,Reddit,General / Brand,Is this worth it compared with a basic pitcher filter?,Cost & value,consideration,neutral,demo_synthetic
+brio_sig_035,2026-08-18,brio,Reddit,Reverse Osmosis Systems,Looking for something that makes our kitchen water taste better.,Taste & odor,problem_awareness,neutral,demo_synthetic
+brio_sig_101,2026-08-18,brio,Customer Reviews,Reverse Osmosis Systems,How can I tell whether a home filter is actually doing anything?,Trust & water quality,research,concerned,demo_synthetic
+brio_sig_134,2026-08-18,brio,CRM Notes,Reverse Osmosis Systems,Prospect mentioned: i keep seeing reports about contaminants and now I'm second guessing our water.,Trust & water quality,problem_awareness,neutral,demo_synthetic
+brio_sig_002,2026-08-19,brio,Reddit,Reverse Osmosis Systems,"Would a filter actually help with the smell and taste, or is that a plumbing issue?",Taste & odor,research,negative,demo_synthetic
+brio_sig_023,2026-08-19,brio,Reddit,Reverse Osmosis Systems,I started looking into filtration because I want better water for the kids.,Family & health reassurance,research,neutral,demo_synthetic
+brio_sig_124,2026-08-19,brio,CRM Notes,Reverse Osmosis Systems,Prospect mentioned: i keep seeing reports about contaminants and now I'm second guessing our water.,Trust & water quality,research,concerned,demo_synthetic
+brio_sig_126,2026-08-19,brio,CRM Notes,Reverse Osmosis Systems,Sales note: our water tastes metallic sometimes and it's making me avoid drinking it.,Taste & odor,research,negative,demo_synthetic
+brio_sig_188,2026-08-19,brio,Social Comments,Reverse Osmosis Systems,Anyone know? We spend way more on bottled water than I realized.,Bottled water frustration,research,negative,demo_synthetic
+brio_sig_014,2026-08-20,brio,Reddit,General / Brand,Our water tastes metallic sometimes and it's making me avoid drinking it.,Taste & odor,problem_awareness,negative,demo_synthetic
+brio_sig_064,2026-08-20,brio,Customer Reviews,Reverse Osmosis Systems,"My experience: Would a filter actually help with the smell and taste, or is that a plumbing issue?",Taste & odor,research,negative,demo_synthetic
+brio_sig_087,2026-08-20,brio,Customer Reviews,Q60 Countertop Dispenser,Is a home filtration system actually cheaper than bottled water long term?,Bottled water frustration,problem_awareness,negative,demo_synthetic
+brio_sig_094,2026-08-20,brio,Customer Reviews,Reverse Osmosis Systems,"Would a filter actually help with the smell and taste, or is that a plumbing issue?",Taste & odor,research,negative,demo_synthetic
+brio_sig_110,2026-08-20,brio,Customer Reviews,Reverse Osmosis Systems,What mattered to me: I can always tell when a drink is made with our tap water because of the taste.,Taste & odor,problem_awareness,negative,demo_synthetic
+brio_sig_130,2026-08-20,brio,CRM Notes,Q60 Countertop Dispenser,Sales note: we go through way too many plastic bottles and I want to stop buying them.,Bottled water frustration,research,neutral,demo_synthetic
+brio_sig_149,2026-08-20,brio,CRM Notes,Reverse Osmosis Systems,Prospect mentioned: can this be installed without drilling into the counter?,Installation & setup,research,neutral,demo_synthetic
+brio_sig_172,2026-08-20,brio,CRM Notes,General / Brand,Call note: how can I tell whether a home filter is actually doing anything?,Trust & water quality,problem_awareness,concerned,demo_synthetic
+brio_sig_056,2026-08-21,brio,Reddit,Reverse Osmosis Systems,"I don't need fancy water, I just want to feel confident drinking it every day.",Trust & water quality,problem_awareness,concerned,demo_synthetic
+brio_sig_086,2026-08-21,brio,Customer Reviews,Reverse Osmosis Systems,"I don't need fancy water, I just want to feel confident drinking it every day.",Trust & water quality,research,neutral,demo_synthetic
+brio_sig_099,2026-08-21,brio,Customer Reviews,Q60 Countertop Dispenser,"Before buying, How often do the filters need replacing and what does that cost?",Cost & value,research,neutral,demo_synthetic
+brio_sig_133,2026-08-21,brio,CRM Notes,Reverse Osmosis Systems,Call note: would you feel comfortable using filtered tap water for baby formula?,Family & health reassurance,research,concerned,demo_synthetic
+brio_sig_186,2026-08-21,brio,Social Comments,General / Brand,What are people using instead of buying cases of water all the time?,Bottled water frustration,research,neutral,demo_synthetic
+brio_sig_197,2026-08-21,brio,Social Comments,Reverse Osmosis Systems,Curious: Is there an easy way to understand what a filtration system actually removes?,Trust & water quality,research,concerned,demo_synthetic
+brio_sig_228,2026-08-21,brio,Search Queries,General / Brand,i want cleaner water at home without obsessing over every technical detail,Family & health reassurance,research,neutral,demo_synthetic
+brio_sig_234,2026-08-21,brio,Search Queries,Q60 Countertop Dispenser,i can always tell when a drink is made with our tap water because of the taste,Taste & odor,research,negative,demo_synthetic
+brio_sig_235,2026-08-21,brio,Search Queries,Q60 Countertop Dispenser,my whole garage is basically bottled water storage at this point,Bottled water frustration,research,negative,demo_synthetic
+brio_sig_105,2026-08-22,brio,Customer Reviews,Reverse Osmosis Systems,"Before buying, Does the more expensive system actually make a noticeable difference?",Cost & value,consideration,neutral,demo_synthetic
+brio_sig_154,2026-08-22,brio,CRM Notes,Q60 Countertop Dispenser,Sales note: looking for something that makes our kitchen water taste better.,Taste & odor,research,negative,demo_synthetic
+brio_sig_156,2026-08-22,brio,CRM Notes,General / Brand,Sales note: i want to feel better about the water coming out of our kitchen faucet.,Trust & water quality,research,neutral,demo_synthetic
+brio_sig_167,2026-08-22,brio,CRM Notes,Reverse Osmosis Systems,Lead asked: what's the difference between RO and ultrafiltration?,Technical filtration,consideration,neutral,demo_synthetic
+brio_sig_201,2026-08-22,brio,Social Comments,Q60 Countertop Dispenser,Anyone know? The biggest thing for me is taste. I don't want that tap-water smell anymore.,Taste & odor,research,negative,demo_synthetic
+brio_sig_202,2026-08-22,brio,Social Comments,Reverse Osmosis Systems,Trying to replace our bottled-water habit with something easier.,Bottled water frustration,research,negative,demo_synthetic
+brio_sig_029,2026-08-23,brio,Reddit,Bottom Load Dispensers,We spend way more on bottled water than I realized.,Bottled water frustration,problem_awareness,neutral,demo_synthetic
+brio_sig_058,2026-08-23,brio,Reddit,Q60 Countertop Dispenser,I'm looking for something my parents could set up without calling someone.,Installation & setup,research,concerned,demo_synthetic
+brio_sig_152,2026-08-23,brio,CRM Notes,General / Brand,Lead asked: how often do the filters need replacing and what does that cost?,Cost & value,research,neutral,demo_synthetic
+brio_sig_059,2026-08-24,brio,Customer Reviews,Q60 Countertop Dispenser,I want cleaner-tasting water without having to keep bottles in the fridge.,Taste & odor,research,neutral,demo_synthetic
+brio_sig_092,2026-08-24,brio,Customer Reviews,Reverse Osmosis Systems,What mattered to me: How complicated is the setup if you're not handy?,Installation & setup,consideration,concerned,demo_synthetic
+brio_sig_102,2026-08-24,brio,Customer Reviews,Reverse Osmosis Systems,My whole garage is basically bottled water storage at this point.,Bottled water frustration,problem_awareness,negative,demo_synthetic
+brio_sig_144,2026-08-24,brio,CRM Notes,General / Brand,Call note: my tap water has a weird taste lately. I just want water that tastes normal.,Taste & odor,research,neutral,demo_synthetic
+brio_sig_145,2026-08-24,brio,CRM Notes,General / Brand,Prospect mentioned: i started looking into filtration because I want better water for the kids.,Family & health reassurance,problem_awareness,neutral,demo_synthetic
+brio_sig_208,2026-08-25,brio,Social Comments,Reverse Osmosis Systems,Curious: My tap water has a weird taste lately. I just want water that tastes normal.,Taste & odor,problem_awareness,negative,demo_synthetic
+brio_sig_210,2026-08-25,brio,Social Comments,General / Brand,Question — Does anyone else notice a chlorine taste in their tap water?,Taste & odor,problem_awareness,negative,demo_synthetic
+brio_sig_230,2026-08-25,brio,Search Queries,Reverse Osmosis Systems,i want to feel better about the water coming out of our kitchen faucet,Trust & water quality,research,neutral,demo_synthetic
+brio_sig_008,2026-08-26,brio,Reddit,Reverse Osmosis Systems,Does anyone else notice a chlorine taste in their tap water?,Taste & odor,problem_awareness,negative,demo_synthetic
+brio_sig_097,2026-08-26,brio,Customer Reviews,General / Brand,"My experience: I care about filtration, but convenience is what will make me stick with it.",Convenience & routine,consideration,neutral,demo_synthetic
+brio_sig_119,2026-08-26,brio,Customer Reviews,Reverse Osmosis Systems,My experience: I'm looking for something my parents could set up without calling someone.,Installation & setup,consideration,concerned,demo_synthetic
+brio_sig_158,2026-08-26,brio,CRM Notes,Reverse Osmosis Systems,Customer question: i can always tell when a drink is made with our tap water because of the taste.,Taste & odor,research,negative,demo_synthetic
+brio_sig_071,2026-08-27,brio,Customer Reviews,Q60 Countertop Dispenser,Trying to make our everyday drinking water feel like a healthier choice.,Family & health reassurance,research,concerned,demo_synthetic
+brio_sig_091,2026-08-27,brio,Customer Reviews,Q60 Countertop Dispenser,What mattered to me: I want filtered water on demand instead of waiting for a pitcher.,Convenience & routine,consideration,neutral,demo_synthetic
+brio_sig_132,2026-08-27,brio,CRM Notes,Reverse Osmosis Systems,Prospect mentioned: i can always tell when a drink is made with our tap water because of the taste.,Taste & odor,research,negative,demo_synthetic
+brio_sig_237,2026-08-27,brio,Search Queries,General / Brand,"the water is technically drinkable, but the taste makes me not want it",Taste & odor,research,negative,demo_synthetic
+brio_sig_084,2026-08-28,brio,Customer Reviews,Reverse Osmosis Systems,"Before buying, I want cleaner water at home without obsessing over every technical detail.",Family & health reassurance,research,neutral,demo_synthetic
+brio_sig_127,2026-08-28,brio,CRM Notes,Bottom Load Dispensers,Customer question: anything that makes it easier to drink more water during the day is a win.,Convenience & routine,consideration,neutral,demo_synthetic
+brio_sig_151,2026-08-28,brio,CRM Notes,Reverse Osmosis Systems,Call note: i'm comparing filters and mostly care about whether the claims are trustworthy.,Trust & water quality,research,concerned,demo_synthetic
+brio_sig_212,2026-08-28,brio,Social Comments,General / Brand,Anyone know? The installation is the part making me hesitate.,Installation & setup,research,concerned,demo_synthetic
+brio_sig_044,2026-08-29,brio,Reddit,Reverse Osmosis Systems,"I don't need fancy water, I just want to feel confident drinking it every day.",Trust & water quality,research,concerned,demo_synthetic
+brio_sig_072,2026-08-29,brio,Customer Reviews,Reverse Osmosis Systems,My experience: The installation is the part making me hesitate.,Installation & setup,consideration,concerned,demo_synthetic
+brio_sig_077,2026-08-29,brio,Customer Reviews,General / Brand,"Before buying, Our water tastes metallic sometimes and it's making me avoid drinking it.",Taste & odor,research,negative,demo_synthetic
+brio_sig_079,2026-08-29,brio,Customer Reviews,General / Brand,Would you feel comfortable using filtered tap water for baby formula?,Family & health reassurance,research,neutral,demo_synthetic
+brio_sig_147,2026-08-29,brio,CRM Notes,Reverse Osmosis Systems,Main hesitation: does anyone else notice a chlorine taste in their tap water?,Taste & odor,problem_awareness,negative,demo_synthetic
+brio_sig_187,2026-08-29,brio,Social Comments,Reverse Osmosis Systems,Anyone know? How do you actually know what's being removed from the water?,Trust & water quality,research,concerned,demo_synthetic
+brio_sig_224,2026-08-29,brio,Search Queries,Reverse Osmosis Systems,i'm comparing tds readings before and after ro filtration,Technical filtration,consideration,neutral,demo_synthetic
+brio_sig_028,2026-08-30,brio,Reddit,Reverse Osmosis Systems,I'd rather buy once than keep replacing cheap pitchers.,Cost & value,consideration,neutral,demo_synthetic
+brio_sig_150,2026-08-30,brio,CRM Notes,Q60 Countertop Dispenser,Lead asked: i want cleaner water at home without obsessing over every technical detail.,Family & health reassurance,problem_awareness,neutral,demo_synthetic
+brio_sig_178,2026-08-30,brio,Social Comments,Reverse Osmosis Systems,Curious: I care more about peace of mind than having a bunch of extra features.,Family & health reassurance,research,concerned,demo_synthetic
+brio_sig_196,2026-08-30,brio,Social Comments,Reverse Osmosis Systems,Do I need a plumber to install one of these?,Installation & setup,research,neutral,demo_synthetic
+brio_sig_218,2026-08-30,brio,Search Queries,Reverse Osmosis Systems,how do you actually know what's being removed from the water,Trust & water quality,research,concerned,demo_synthetic
+brio_sig_090,2026-08-31,brio,Customer Reviews,Reverse Osmosis Systems,What mattered to me: How often does an RO membrane usually need to be replaced?,Technical filtration,consideration,neutral,demo_synthetic
+brio_sig_096,2026-08-31,brio,Customer Reviews,Q60 Countertop Dispenser,What mattered to me: Anything that makes it easier to drink more water during the day is a win.,Convenience & routine,problem_awareness,neutral,demo_synthetic
+brio_sig_139,2026-08-31,brio,CRM Notes,Q60 Countertop Dispenser,Lead asked: looking for something that fits into the routine without extra work.,Convenience & routine,problem_awareness,neutral,demo_synthetic
+brio_sig_220,2026-08-31,brio,Search Queries,General / Brand,i can always tell when a drink is made with our tap water because of the taste,Taste & odor,problem_awareness,neutral,demo_synthetic
+brio_sig_030,2026-09-01,brio,Reddit,Reverse Osmosis Systems,I'm so tired of carrying cases of bottled water home every week.,Bottled water frustration,research,negative,demo_synthetic
+brio_sig_052,2026-09-01,brio,Reddit,Bottom Load Dispensers,I'd love to get rid of the pile of empty bottles in our recycling.,Bottled water frustration,problem_awareness,negative,demo_synthetic
+brio_sig_194,2026-09-01,brio,Social Comments,Reverse Osmosis Systems,Anyone know? Does reverse osmosis remove minerals too?,Technical filtration,research,neutral,demo_synthetic
+brio_sig_204,2026-09-01,brio,Social Comments,Reverse Osmosis Systems,Question — I'm comparing filters and mostly care about whether the claims are trustworthy.,Trust & water quality,problem_awareness,neutral,demo_synthetic
+brio_sig_223,2026-09-01,brio,Search Queries,Reverse Osmosis Systems,i'm comparing filters and mostly care about whether the claims are trustworthy,Trust & water quality,research,concerned,demo_synthetic
+brio_sig_153,2026-09-02,brio,CRM Notes,Bottom Load Dispensers,Call note: i'm so tired of carrying cases of bottled water home every week.,Bottled water frustration,problem_awareness,neutral,demo_synthetic
+brio_sig_226,2026-09-02,brio,Search Queries,General / Brand,trying to find a filter because our coffee even tastes off with the tap water,Taste & odor,problem_awareness,negative,demo_synthetic
+brio_sig_062,2026-09-03,brio,Customer Reviews,Q60 Countertop Dispenser,What mattered to me: My tap water has a weird taste lately. I just want water that tastes normal.,Taste & odor,research,negative,demo_synthetic
+brio_sig_069,2026-09-03,brio,Customer Reviews,Reverse Osmosis Systems,"My experience: Would a filter actually help with the smell and taste, or is that a plumbing issue?",Taste & odor,research,negative,demo_synthetic
+brio_sig_111,2026-09-03,brio,Customer Reviews,Reverse Osmosis Systems,"Before buying, Looking for something that makes our kitchen water taste better.",Taste & odor,problem_awareness,neutral,demo_synthetic
+brio_sig_117,2026-09-03,brio,Customer Reviews,Reverse Osmosis Systems,Can this be installed without drilling into the counter?,Installation & setup,consideration,concerned,demo_synthetic
+brio_sig_125,2026-09-03,brio,CRM Notes,Reverse Osmosis Systems,"Customer question: would a filter actually help with the smell and taste, or is that a plumbing issue?",Taste & odor,research,neutral,demo_synthetic
+brio_sig_136,2026-09-03,brio,CRM Notes,General / Brand,Prospect mentioned: how complicated is the setup if you're not handy?,Installation & setup,consideration,concerned,demo_synthetic
+brio_sig_225,2026-09-03,brio,Search Queries,Q60 Countertop Dispenser,is a home filtration system actually cheaper than bottled water long term,Bottled water frustration,problem_awareness,negative,demo_synthetic
+brio_sig_009,2026-09-04,brio,Reddit,General / Brand,Does this connect to the existing faucet or need its own faucet?,Installation & setup,consideration,concerned,demo_synthetic
+brio_sig_075,2026-09-04,brio,Customer Reviews,Reverse Osmosis Systems,My experience: How do you actually know what's being removed from the water?,Trust & water quality,research,concerned,demo_synthetic
+brio_sig_085,2026-09-04,brio,Customer Reviews,General / Brand,My experience: I want cleaner-tasting water without having to keep bottles in the fridge.,Taste & odor,research,negative,demo_synthetic
+brio_sig_114,2026-09-04,brio,Customer Reviews,General / Brand,Dragging water bottles upstairs every week is getting old.,Bottled water frustration,problem_awareness,neutral,demo_synthetic
+brio_sig_163,2026-09-04,brio,CRM Notes,Reverse Osmosis Systems,"Prospect mentioned: the water is technically drinkable, but the taste makes me not want it.",Taste & odor,problem_awareness,neutral,demo_synthetic
+brio_sig_033,2026-09-05,brio,Reddit,Reverse Osmosis Systems,Our water tastes metallic sometimes and it's making me avoid drinking it.,Taste & odor,research,neutral,demo_synthetic
+brio_sig_074,2026-09-05,brio,Customer Reviews,Bottom Load Dispensers,"My experience: The easier it is to use, the more likely everyone in my house will actually use it.",Convenience & routine,problem_awareness,neutral,demo_synthetic
+brio_sig_236,2026-09-05,brio,Search Queries,Reverse Osmosis Systems,"i want something with clear proof, not just marketing that says the water is cleaner",Trust & water quality,research,concerned,demo_synthetic
+brio_sig_004,2026-09-06,brio,Reddit,Reverse Osmosis Systems,How many stages of reverse osmosis are actually necessary?,Technical filtration,consideration,neutral,demo_synthetic
+brio_sig_032,2026-09-06,brio,Reddit,Q60 Countertop Dispenser,Looking for something that fits into the routine without extra work.,Convenience & routine,consideration,neutral,demo_synthetic
+brio_sig_045,2026-09-06,brio,Reddit,General / Brand,Our water tastes metallic sometimes and it's making me avoid drinking it.,Taste & odor,problem_awareness,neutral,demo_synthetic
+brio_sig_066,2026-09-06,brio,Customer Reviews,Reverse Osmosis Systems,Dragging water bottles upstairs every week is getting old.,Bottled water frustration,research,neutral,demo_synthetic
+brio_sig_070,2026-09-06,brio,Customer Reviews,General / Brand,Does anyone else notice a chlorine taste in their tap water?,Taste & odor,research,negative,demo_synthetic
+brio_sig_083,2026-09-06,brio,Customer Reviews,Q60 Countertop Dispenser,"My experience: Would a filter actually help with the smell and taste, or is that a plumbing issue?",Taste & odor,research,negative,demo_synthetic
+brio_sig_006,2026-09-07,brio,Reddit,Reverse Osmosis Systems,What should I look for if I'm worried about what's in my tap water?,Trust & water quality,research,neutral,demo_synthetic
+brio_sig_051,2026-09-07,brio,Reddit,Q60 Countertop Dispenser,What are people using instead of buying cases of water all the time?,Bottled water frustration,research,neutral,demo_synthetic
+brio_sig_067,2026-09-07,brio,Customer Reviews,Bottom Load Dispensers,"What mattered to me: I care about filtration, but convenience is what will make me stick with it.",Convenience & routine,problem_awareness,neutral,demo_synthetic
+brio_sig_082,2026-09-07,brio,Customer Reviews,General / Brand,"I rent, so I can't make permanent changes under the sink.",Installation & setup,research,concerned,demo_synthetic
+brio_sig_205,2026-09-07,brio,Social Comments,General / Brand,"The easier it is to use, the more likely everyone in my house will actually use it.",Convenience & routine,problem_awareness,neutral,demo_synthetic
+brio_sig_129,2026-09-08,brio,CRM Notes,Reverse Osmosis Systems,Main hesitation: looking for a filter for a family of four. What actually matters?,Family & health reassurance,problem_awareness,concerned,demo_synthetic
+brio_sig_168,2026-09-08,brio,CRM Notes,Reverse Osmosis Systems,Customer question: does this connect to the existing faucet or need its own faucet?,Installation & setup,consideration,concerned,demo_synthetic
+brio_sig_179,2026-09-08,brio,Social Comments,Q60 Countertop Dispenser,Anyone know? I'm trying to make hydration less of a chore.,Convenience & routine,problem_awareness,neutral,demo_synthetic
+brio_sig_184,2026-09-08,brio,Social Comments,Reverse Osmosis Systems,I can always tell when a drink is made with our tap water because of the taste.,Taste & odor,research,neutral,demo_synthetic
+brio_sig_200,2026-09-08,brio,Social Comments,General / Brand,I'm trying to make hydration less of a chore.,Convenience & routine,consideration,neutral,demo_synthetic
+brio_sig_211,2026-09-08,brio,Social Comments,Q60 Countertop Dispenser,"Anyone know? I care about filtration, but convenience is what will make me stick with it.",Convenience & routine,problem_awareness,neutral,demo_synthetic
+brio_sig_141,2026-09-09,brio,CRM Notes,Reverse Osmosis Systems,"Customer question: i rent, so I can't make permanent changes under the sink.",Installation & setup,consideration,concerned,demo_synthetic
+brio_sig_164,2026-09-09,brio,CRM Notes,Q60 Countertop Dispenser,Sales note: is a home filtration system actually cheaper than bottled water long term?,Bottled water frustration,research,neutral,demo_synthetic
+brio_sig_221,2026-09-09,brio,Search Queries,Reverse Osmosis Systems,does anyone else notice a chlorine taste in their tap water,Taste & odor,research,neutral,demo_synthetic
+brio_sig_012,2026-09-10,brio,Reddit,General / Brand,The biggest thing for me is taste. I don't want that tap-water smell anymore.,Taste & odor,research,neutral,demo_synthetic
+brio_sig_078,2026-09-10,brio,Customer Reviews,Reverse Osmosis Systems,I'm comparing TDS readings before and after RO filtration.,Technical filtration,consideration,neutral,demo_synthetic
+brio_sig_118,2026-09-10,brio,Customer Reviews,Reverse Osmosis Systems,I'm specifically looking for reverse osmosis because of dissolved contaminants.,Technical filtration,research,neutral,demo_synthetic
+brio_sig_166,2026-09-10,brio,CRM Notes,Reverse Osmosis Systems,"Sales note: i want better water, but I really don't want to mess with plumbing.",Installation & setup,research,concerned,demo_synthetic
+brio_sig_207,2026-09-10,brio,Social Comments,Reverse Osmosis Systems,"I don't need fancy water, I just want to feel confident drinking it every day.",Trust & water quality,research,neutral,demo_synthetic
+brio_sig_209,2026-09-10,brio,Social Comments,Q60 Countertop Dispenser,Our water tastes metallic sometimes and it's making me avoid drinking it.,Taste & odor,research,negative,demo_synthetic
+brio_sig_104,2026-09-11,brio,Customer Reviews,Bottom Load Dispensers,My experience: I don't want to refill a tiny pitcher five times a day.,Convenience & routine,consideration,neutral,demo_synthetic
+brio_sig_109,2026-09-11,brio,Customer Reviews,Reverse Osmosis Systems,What mattered to me: Would you feel comfortable using filtered tap water for baby formula?,Family & health reassurance,research,concerned,demo_synthetic
+brio_sig_138,2026-09-11,brio,CRM Notes,General / Brand,Lead asked: we go through way too many plastic bottles and I want to stop buying them.,Bottled water frustration,problem_awareness,negative,demo_synthetic
+brio_sig_046,2026-09-12,brio,Reddit,Reverse Osmosis Systems,I'm comparing the price with what we spend on bottled water every month.,Cost & value,consideration,neutral,demo_synthetic
+brio_sig_047,2026-09-12,brio,Reddit,Q60 Countertop Dispenser,I'd love to get rid of the pile of empty bottles in our recycling.,Bottled water frustration,research,negative,demo_synthetic
+brio_sig_054,2026-09-12,brio,Reddit,Q60 Countertop Dispenser,"I care about filtration, but convenience is what will make me stick with it.",Convenience & routine,problem_awareness,neutral,demo_synthetic
+brio_sig_098,2026-09-12,brio,Customer Reviews,Bottom Load Dispensers,I don't want to refill a tiny pitcher five times a day.,Convenience & routine,consideration,neutral,demo_synthetic
+brio_sig_183,2026-09-12,brio,Social Comments,Reverse Osmosis Systems,Anyone know? What should I look for if I'm worried about what's in my tap water?,Trust & water quality,problem_awareness,neutral,demo_synthetic
+brio_sig_213,2026-09-12,brio,Social Comments,Q60 Countertop Dispenser,"Curious: I want better water, but I really don't want to mess with plumbing.",Installation & setup,consideration,neutral,demo_synthetic
+brio_sig_041,2026-09-13,brio,Reddit,Reverse Osmosis Systems,The biggest thing for me is taste. I don't want that tap-water smell anymore.,Taste & odor,problem_awareness,negative,demo_synthetic
+brio_sig_081,2026-09-13,brio,Customer Reviews,Q60 Countertop Dispenser,I want filtered water on demand instead of waiting for a pitcher.,Convenience & routine,problem_awareness,neutral,demo_synthetic
+brio_sig_123,2026-09-13,brio,CRM Notes,Reverse Osmosis Systems,Customer question: i want to stop buying water but I don't like the taste from our tap.,Bottled water frustration,problem_awareness,negative,demo_synthetic
+brio_sig_148,2026-09-13,brio,CRM Notes,Reverse Osmosis Systems,Main hesitation: i can always tell when a drink is made with our tap water because of the taste.,Taste & odor,problem_awareness,neutral,demo_synthetic
+brio_sig_162,2026-09-13,brio,CRM Notes,Reverse Osmosis Systems,Prospect mentioned: i want to feel better about the water coming out of our kitchen faucet.,Trust & water quality,problem_awareness,concerned,demo_synthetic
+brio_sig_240,2026-09-13,brio,Search Queries,Reverse Osmosis Systems,what's the difference between ro and ultrafiltration,Technical filtration,research,neutral,demo_synthetic

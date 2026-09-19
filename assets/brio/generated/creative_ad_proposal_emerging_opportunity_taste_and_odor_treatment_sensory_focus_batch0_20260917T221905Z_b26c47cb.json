@@ -1,0 +1,19 @@
+{
+  "generated_id": "creative_ad_proposal_emerging_opportunity_taste_and_odor_treatment_sensory_focus_batch0_20260917T221905Z_b26c47cb",
+  "client_id": "brio",
+  "proposal_id": "proposal::emerging_opportunity::taste_and_odor",
+  "concept_id": "creative::ad::proposal::emerging_opportunity::taste_and_odor::treatment::sensory_focus::batch0",
+  "control_creative_id": "brio_cr_001",
+  "control_image_path": "/Users/katemikhailova/softline_marketing_hub/assets/brio/source_ads/brio_99_9_contaminants.png",
+  "batch_id": "batch0",
+  "on_image_headline": "\"Taste & odor? Not with Reverse Osmosis Systems.\"",
+  "on_image_supporting_copy": "",
+  "on_image_proof": "",
+  "on_image_cta": "",
+  "provider": "fake",
+  "model": "fake-model",
+  "generated_at": "2026-09-17T22:19:05.370935+00:00",
+  "prompt": "You are creating one visual creative version of an approved, controlled marketing-creative experiment. Other visual versions of this same ad may use different on-image wording while expressing the same approved message strategy; this is a visual/product reference, not a request for a pixel-identical copy.\n\nEXACT ON-IMAGE COPY - DO NOT REWRITE OR PARAPHRASE\n\nOn-image headline:\n\"\"Taste & odor? Not with Reverse Osmosis Systems.\"\"\n\nReproduce this text exactly as written, character for character, and include ONLY the on-image text listed above (if a field such as a CTA isn't listed, omit it from the image rather than inventing one). Do not invent additional marketing claims, do not paraphrase, do not change any percentages or numbers, and do not add feature claims that are not supplied above.\n\nALSO FIXED (do not change):\n- Product: Reverse Osmosis Systems\n- Format: static\n- Funnel stage: TOF\n- Experiment variable being tested: Primary message hook / opening claim\n\nTHIS VERSION'S VISUAL DIRECTION (only this may change - background, composition, crop, product emphasis, lifestyle vs. studio treatment, visual hierarchy):\nEmphasize a close, sensory product detail (e.g. water, glass, texture) connected to taste & odor, rather than a wide product shot.\n\nREFERENCE:\nThe attached image is the control creative for this product. Use it as the strongest visual and product reference, and keep the brand identity, product design, and packaging it shows.\n\nAVOID:\n- Changing the offer\n- Inventing a new claim\n- Changing the product\n- Changing the CTA beyond what is specified below\n- Introducing a second marketing hypothesis\n- Changing the on-image copy simply to create visual variety",
+  "revised_prompt": null,
+  "generation_source": "live"
+}

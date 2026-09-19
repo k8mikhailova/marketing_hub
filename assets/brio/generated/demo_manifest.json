@@ -1,0 +1,35 @@
+{
+  "client_id": "brio",
+  "entries": [
+    {
+      "proposal_id": "proposal::emerging_opportunity::taste_and_odor",
+      "control_creative_id": "brio_cr_001",
+      "product": "Reverse Osmosis Systems",
+      "funnel_stage": "TOF",
+      "batch_index": 0,
+      "concept_id": "creative::ad::proposal::emerging_opportunity::taste_and_odor::treatment::control_inspired::batch0",
+      "generated_id": "creative_ad_proposal_emerging_opportunity_taste_and_odor_treatment_control_inspired_batch0_20260917T025428Z_d7329674",
+      "generation_source": "pre_generated_demo"
+    },
+    {
+      "proposal_id": "proposal::emerging_opportunity::taste_and_odor",
+      "control_creative_id": "brio_cr_001",
+      "product": "Reverse Osmosis Systems",
+      "funnel_stage": "TOF",
+      "batch_index": 0,
+      "concept_id": "creative::ad::proposal::emerging_opportunity::taste_and_odor::treatment::lifestyle::batch0",
+      "generated_id": "creative_ad_proposal_emerging_opportunity_taste_and_odor_treatment_lifestyle_batch0_20260917T023224Z_2c99e0d7",
+      "generation_source": "pre_generated_demo"
+    },
+    {
+      "proposal_id": "proposal::emerging_opportunity::taste_and_odor",
+      "control_creative_id": "brio_cr_001",
+      "product": "Reverse Osmosis Systems",
+      "funnel_stage": "TOF",
+      "batch_index": 0,
+      "concept_id": "creative::ad::proposal::emerging_opportunity::taste_and_odor::treatment::sensory_focus::batch0",
+      "generated_id": "creative_ad_proposal_emerging_opportunity_taste_and_odor_treatment_sensory_focus_batch0_20260917T023241Z_539d47ec",
+      "generation_source": "pre_generated_demo"
+    }
+  ]
+}
