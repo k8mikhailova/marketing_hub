@@ -13,7 +13,7 @@ import altair as alt
 import streamlit as st
 
 from core import ui
-from core.analytics import aggregate_signals, filter_signals, summarize_signals, theme_movement
+from core.analytics import aggregate_signals, filter_signals, summarize_signals, theme_movement, theme_takeaway
 from core.data import load_customer_signals
 from core.shell import current_client
 
@@ -83,6 +83,21 @@ def _movement_label(count: int, change: int | None) -> str:
     if change < 0:
         return f"{count} ↓ {abs(change)}"
     return f"{count} →"
+
+
+def _takeaway_text(takeaway: dict) -> str:
+    """The one-sentence "what to notice" for the theme chart, from
+    core.analytics.theme_takeaway. Honest about missing history: it never
+    describes a trend the data cannot support.
+    """
+    if takeaway["status"] == "increase":
+        return (
+            f"{ui.theme_label(takeaway['theme'])} showed the largest increase, rising from "
+            f"{takeaway['previous_count']} to {takeaway['signal_count']} mentions."
+        )
+    if takeaway["status"] == "no_increase":
+        return "No customer theme increased meaningfully during this period."
+    return "There isn't enough prior-period data to identify a movement trend yet."
 
 
 def _render_signal_entry(row) -> None:
@@ -169,6 +184,8 @@ else:
     # function can see the prior period too, not just the selected one.
     theme_table, movement_available = theme_movement(filtered_scope, start, end)
     n_themes = len(theme_table)
+
+    ui.callout("What to notice", _takeaway_text(theme_takeaway(theme_table, movement_available)))
 
     if movement_available:
         theme_table["movement_label"] = theme_table.apply(

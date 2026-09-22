@@ -1,9 +1,9 @@
 """Overview page: What needs your attention -> Account performance.
 
-All KPI math, aggregation, and insight logic live in core/ (data.py,
-analytics.py, insights.py, assets.py). This file only wires those
-functions to Streamlit widgets and lays out the result. No calculation
-happens here.
+All KPI math and aggregation live in core/ (data.py, analytics.py), and
+all findings come from the Intelligence Agent (agents/intelligence/
+engine.py). This file only wires those to Streamlit widgets and lays out
+the result. No calculation happens here.
 
 Milestone 18 redesign: the page used to lead with a raw KPI dashboard,
 then a "Marketing Intelligence" row of the same 3 insights, then a
@@ -11,12 +11,24 @@ hardcoded "Action Center" whose own items were explicitly NOT derived
 from real data (a placeholder for a future review queue). That put the
 least useful section (a static placeholder) last and the most useful one
 (interpretation) second, behind bare numbers. This version leads with
-"What needs your attention": up to 3 real, data-driven items built from
-the SAME core.insights functions the old "Marketing Intelligence" row
-already called (no new findings logic, no duplicated Intelligence Agent
-logic) plus, when one exists in this session, the current experiment
-result. Account-level KPIs/trend move below that, as context once the
-headline is already understood.
+"What needs your attention" (see below for what it summarizes today).
+Account-level KPIs/trend move below that, as context once the headline is
+already understood.
+
+Milestones 25-26: "What needs your attention" is an executive SUMMARY, not
+a list of per-finding tasks, and it summarizes the SAME findings the rest
+of the product uses. The Intelligence Agent
+(agents.intelligence.engine.generate_findings) is the single source of
+truth for marketer-facing findings: Overview previews them, Insights shows
+them with evidence, and the Creative Strategist consumes them to build the
+Creative Plan. This page previously derived its own, different insights
+from core.insights (a pre-Intelligence-Agent preview layer), which is why
+its "performance" item could describe a different product and funnel stage
+than the Insights page; it no longer imports core.insights at all. The old
+per-item actions belonged to the pre-Creative-Plan model and are gone; one
+quiet "View Insights" link remains. Experiment learnings finished this
+session (Performance Agent output) appear in their own labeled group after
+the current findings and never displace them.
 """
 from datetime import timedelta
 
@@ -24,12 +36,11 @@ import altair as alt
 import pandas as pd
 import streamlit as st
 
+from agents.intelligence.engine import generate_findings
 from agents.performance.engine import EVIDENCE_STRENGTH_LABELS
 from core import ui
 from core.analytics import aggregate_performance, compare_periods, filter_date_range, has_full_period, previous_period
-from core.assets import resolve_image_for_product
 from core.data import load_customer_signals, load_performance_with_creatives
-from core.insights import emerging_signal, next_opportunity, winning_pattern
 from core.shell import current_client
 
 TREND_METRICS = {"ROAS": "roas", "Revenue": "revenue", "CPA": "cpa", "CTR": "ctr"}
@@ -62,133 +73,109 @@ def _render_kpi(col, label, value_str, row, metric, higher_is_good, comparison_v
     col.metric(label, value_str, delta=delta_str, delta_color=delta_color)
 
 
-def _md_safe(text: str) -> str:
-    """Escape '$' so markdown/caption rendering never mistakes two currency
-    values in one string for a LaTeX math span (a real rendering bug this
-    page had: "...($89.70 CPA) versus...($112.51 CPA)" rendered broken)."""
-    return text.replace("$", "\\$")
+# Overview-only presentation order for the current findings (an executive
+# story: what customers are doing, where our creative falls short, what
+# performance context exists). Keyed by the Finding's own TYPE, never an id
+# or title, so it works for any data; a type not listed here keeps the
+# Intelligence Agent's own order after the listed ones, and an absent type
+# is simply not rendered. The Agent's priority order (what Insights and the
+# Creative Plan see) is untouched: this only reorders a copy for display.
+OVERVIEW_TYPE_ORDER = ["Emerging Opportunity", "Messaging Gap", "Performance Pattern"]
 
 
-def _signal_facts(data: dict) -> tuple[str, str]:
-    """(facts line, why-it-matters line) for an emerging_signal Insight,
-    reusing its own data dict and the exact wording this page already
-    established for each kind, never inventing new numbers."""
-    if data.get("kind") == "growth":
-        return (
-            f'{data["second_half"]} mentions · +{data["delta"]} vs prior period',
-            "Largest increase of any customer-conversation theme.",
-        )
-    return (
-        f'{data["count"]} of {data["total"]} signals',
-        "Most-mentioned theme this period (no clear growth).",
-    )
+def _overview_order(findings: list) -> list:
+    rank = {t: i for i, t in enumerate(OVERVIEW_TYPE_ORDER)}
+    return sorted(findings, key=lambda f: rank.get(f.type, len(OVERVIEW_TYPE_ORDER)))
 
 
-def _pattern_facts(data: dict) -> tuple[str, str]:
-    """(facts line, why-it-matters line) for a winning_pattern Insight."""
-    if data.get("kind") == "tradeoff":
-        eff, att = data["efficiency"], data["attention"]
-        return (f'{eff["roas"]:.2f}x ROAS · {att["ctr"]:.2%} CTR', data["interpretation"])
-    return (
-        f'{data["roas"]:.2f}x ROAS · {data["lift"]:.1f}x peer avg',
-        f'Outperforming its peers within {data["context"]}.',
-    )
-
-
-def _opportunity_facts(data: dict) -> tuple[str, str]:
-    """(facts line, why-it-matters line) for a next_opportunity Insight."""
-    return (
-        f'{data["signal_share"]:.0%} of signals · {data["primary_hook_count"]}/{data["relevant_creatives"]} creatives lead with it',
-        data["recommendation"],
-    )
-
-
-def _render_feed_item(eyebrow: str, insight, facts_fn, cta_label: str, cta_page: str, image=None) -> None:
-    """One row in the "What needs your attention" feed (Part 1, badge
-    treatment per Milestone 20 Part 2): a consistent category BADGE (never
-    a mismatched decorative symbol), ONE conclusion (the insight's own
-    headline), 1-2 compact supporting facts, and ONE obvious next action,
-    in a consistent vertical rhythm rather than an equal-height bordered
-    card. Evidence stays one quiet expander away, never competing with
-    the action for attention.
+def _render_finding_summary(finding) -> None:
+    """One current Intelligence Agent finding as a compact, quiet summary
+    card: its category badge (the finding's own type, the same badge
+    Insights shows), its title (strongest), and its one-sentence summary
+    (secondary; real numbers straight from the Finding). No evidence, no
+    confidence line, no action: Insights answers "why does the system think
+    that"; this answers "what does it want me to know".
     """
-    facts, why = facts_fn(insight.data)
-    ui.badge_row([eyebrow.upper()])
-    st.markdown(f"**{insight.headline}**")
-    st.caption(_md_safe(facts))
-    st.write(why)
-    if image is not None:
-        creative_id, image_path = image
-        img_col, _ = st.columns([1, 4])
-        with img_col:
-            st.image(str(image_path), width=80)
-        ui.muted(f"Publicly visible Brio creative ({creative_id}): evidence only, not simulated performance.")
-
-    action_col, evidence_col = st.columns([1, 1])
-    with action_col:
-        st.page_link(cta_page, label=f"{cta_label} →")
-    with evidence_col:
-        with st.expander("View evidence"):
-            st.write(_md_safe(insight.explanation))
-            for line in insight.evidence_lines:
-                st.markdown(f"- {_md_safe(line)}")
-            if insight.evidence_table is not None:
-                st.dataframe(insight.evidence_table, hide_index=True, use_container_width=True)
+    with ui.card("standard", rhythm=True, soft=True):
+        ui.badge_row([finding.type.upper()])
+        ui.text_stack(finding.title, finding.summary, bold_primary=True)
 
 
-def _render_experiment_feed_item(client_id: str) -> bool:
-    """The one attention item this page reads from session state rather
-    than core.insights: a demo test the marketer already ran on
-    Experiments, in THIS session, for the CURRENT client. Never a new
-    finding, never persisted, never fabricated when nothing has run yet
-    (returns False and renders nothing)."""
-    handoff = st.session_state.get("experiment_handoff")
-    analysis = st.session_state.get("experiment_analysis")
-    if not handoff or handoff.get("client_id") != client_id or analysis is None:
-        return False
+def _completed_experiment_analyses(client_id: str) -> list[tuple[dict, object]]:
+    """(handoff, ConceptExperimentAnalysis) for every experiment the marketer
+    already ran in THIS session for the CURRENT client (Experiments V2 keeps
+    these in per-proposal_id dicts). Never a new finding, never persisted,
+    and empty when nothing has run yet.
+    """
+    handoffs = st.session_state.get("experiment_handoffs", {})
+    analyses = st.session_state.get("experiment_analyses", {})
+    completed = []
+    for proposal_id, handoff in handoffs.items():
+        if handoff.get("client_id") != client_id or handoff.get("status") != "results_pending":
+            continue
+        analysis = analyses.get(proposal_id)
+        if analysis is not None:
+            completed.append((handoff, analysis))
+    return completed
 
-    ui.badge_row(["Experiment result"])
-    st.markdown(f"**{analysis.headline}**")
-    st.caption(f"{EVIDENCE_STRENGTH_LABELS.get(analysis.evidence_strength, analysis.evidence_strength)} evidence so far.")
-    st.write(analysis.recommendation_note)
-    st.page_link("app_pages/experiments.py", label="Review experiment →")
-    return True
+
+def _render_experiment_learning(handoff: dict, analysis) -> None:
+    """A finished demo experiment, summarized in the same card language as
+    the findings but kept in its own group: the Performance Agent's own
+    headline and learning statement, its evidence tier, and the truthful
+    "proposed, pending review" status. Deliberately a different badge from
+    the Intelligence Agent's findings: this is what an experiment showed,
+    not what the market data suggests.
+    """
+    with ui.card("standard", rhythm=True, soft=True):
+        ui.badge_row(["EXPERIMENT LEARNING"])
+        ui.text_stack(f"{handoff['customer_theme']} messaging test: {analysis.headline}", analysis.learning_statement, bold_primary=True)
+        evidence = EVIDENCE_STRENGTH_LABELS.get(analysis.evidence_strength, analysis.evidence_strength)
+        st.caption(f"{evidence} evidence so far. Proposed learning, pending review.")
+
+
+# Current findings are never crowded out by experiment learnings: every
+# current Intelligence finding is always shown first, and at most this many
+# experiment learnings follow it, in a separately labeled group.
+MAX_EXPERIMENT_LEARNINGS = 2
+
+def _attention_subtitle(has_experiments: bool) -> str:
+    """State-aware: never implies experiment evidence before an experiment
+    has actually been run in this session."""
+    areas = ["customer conversation", "creative coverage", "performance"]
+    if has_experiments:
+        areas.append("experiments")
+    return f"The most important things the system is seeing across {', '.join(areas[:-1])}, and {areas[-1]}."
 
 
 def _render_attention_section(client_id: str) -> None:
-    ui.section_header("What needs your attention")
+    """A short executive preview of what the system currently wants the
+    marketer to know: the SAME Finding objects the Insights page renders
+    (agents.intelligence.engine.generate_findings, same max_findings=3, so
+    Overview, Insights and, through the Strategist, Creative Lab can never
+    disagree about "what the system learned"), shown in an Overview-specific
+    order, plus any experiment learning finished this session. Each item is
+    a summary, not a task: the only navigation is one quiet section-level
+    link to the full Insights page.
+    """
+    experiments = _completed_experiment_analyses(client_id)[:MAX_EXPERIMENT_LEARNINGS]
+    ui.section_header("What needs your attention", _attention_subtitle(bool(experiments)))
 
-    opportunity = next_opportunity(client_id)
-    opportunity_image = None
-    if opportunity.found and "product" in opportunity.data:
-        opportunity_image = resolve_image_for_product(client_id, opportunity.data["product"])
+    findings = _overview_order(generate_findings(client_id, max_findings=3))
 
-    signal = emerging_signal(client_id)
-    signal_eyebrow = "Emerging signal" if signal.found and signal.data.get("kind") == "growth" else "Customer signal"
-
-    # (eyebrow, insight, facts_fn, cta_label, cta_page, image)
-    candidates = [
-        (signal_eyebrow, signal, _signal_facts, "Explore opportunity", "app_pages/intelligence.py", None),
-        ("Creative opportunity", opportunity, _opportunity_facts, "Develop creative", "app_pages/creative_lab.py", opportunity_image),
-        ("Performance pattern", winning_pattern(client_id), _pattern_facts, "View performance", "app_pages/intelligence.py", None),
-    ]
-    found_candidates = [c for c in candidates if c[1].found]
-
-    shown = 0
-    if _render_experiment_feed_item(client_id):
-        shown += 1
-        st.divider()
-
-    for i, (eyebrow, insight, facts_fn, cta_label, cta_page, image) in enumerate(found_candidates):
-        if shown >= 3:
-            break
-        _render_feed_item(eyebrow, insight, facts_fn, cta_label, cta_page, image)
-        shown += 1
-        if i < len(found_candidates) - 1 and shown < 3:
-            st.divider()
-
-    if shown == 0:
+    if not findings and not experiments:
         ui.empty_state("Nothing needs attention yet.", "Once customer signals and performance data accumulate, this section fills in automatically.")
+        return
+
+    for finding in findings:
+        _render_finding_summary(finding)
+
+    if experiments:
+        ui.section_header("Recent experiment learning", level="subsection")
+        for handoff, analysis in experiments:
+            _render_experiment_learning(handoff, analysis)
+
+    st.page_link("app_pages/intelligence.py", label="View Insights →")
 
 
 client = current_client()

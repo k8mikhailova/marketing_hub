@@ -100,7 +100,7 @@ render through a placeholder ("Creative preview: image generation added
 next," `core/ui.py::render_creative_placeholder`); this milestone never
 calls the image provider or reuses an existing generated/demo asset for a
 new concept, and reconnecting live generation for concepts is explicit
-future work, not a decision this module has made yet.
+future work at that point; it was done in Milestone 28, see "Creative Studio V3" below.
 
 **Boundaries:** Ad-package generation only runs once a human reaches the
 Experiment stage in Creative Lab and requests creative options; no
@@ -121,3 +121,50 @@ live mode, image generation calls OpenAI's live image-editing API
 call in the app, and only in that mode (the default, demo mode, makes
 none). Never creates an experiment record, simulates a result, integrates
 with Meta, or writes to `approved_learnings.json`, at either stage.
+
+## Creative Studio V3 (Milestone 27): finished, test-ready ads
+
+Creative Studio now produces the FINISHED ad for each Creative Concept, and
+Creative Lab is where that happens; Experiments tests the exact ads created
+and approved there and never regenerates or reinterprets one.
+
+Pipeline (agents/creative_studio/pipeline.py):
+`CreativeConcept -> AdExecutionSpec (text step, execution.py) -> image
+request (generation.py::build_ad_prompt) -> GeneratedCreative (persisted by
+creative_store.py)`. The copy exists as validated data BEFORE any image is
+generated; the image model is told exactly which on-image words to render and
+is never asked to invent strategy or copy.
+
+- **AdExecutionSpec** holds strategy (concept/opportunity ids, angle,
+  intent, learning question, theme, avatar, awareness, product, funnel),
+  copy (on-image headline, primary text, Meta headline, description, CTA),
+  visual (visual direction, required product, proof to preserve, reference
+  creative), experiment (variable changed, constants, why the concept
+  exists) and provenance. Python fills every field except the model's five
+  (`ExecutionCopy`); the CTA and proof are constants the model cannot alter.
+- **Validation** (`validate_execution_spec`): no number absent from the
+  approved proof, no performance/certification/health/savings/guarantee/
+  testimonial/scientific language, no quotation marks, no reuse of the
+  reference ad's headline, ad-realistic length limits, and distinctness
+  across the concepts of an opportunity. Failures raise `ExecutionSpecError`
+  with the specific issues; nothing is saved and the user can retry.
+- **Providers** sit behind narrow seams: `TextGenerationProvider`
+  (text_provider.py, `chat.completions.parse` structured output) and
+  `ImageGenerationProvider` (image_provider.py: `images.edit` with a
+  reference, `images.generate` without). Model ids live only in
+  `config.py` (env overrides OPENAI_IMAGE_MODEL / OPENAI_TEXT_MODEL).
+- **References** are read-only: the opportunity's existing same-product ad,
+  for product appearance only (the prompt forbids reproducing its layout or
+  wording); none is forced where none exists.
+- **Cost protection:** nothing runs on render or rerun; generation is an
+  explicit per-opportunity action; a creative whose `creative_key` already
+  exists on disk is returned with zero provider calls; only Regenerate
+  bypasses that, and it writes a NEW version (older versions stay); one
+  concept's failure never affects another; an image-step retry re-uses the
+  cached spec instead of paying for the text step again.
+- **Live vs demo:** both resolve into the same `GeneratedCreative`. Live
+  produces and saves; demo (no key, no provider) loads what live saved
+  (`generation_source="saved"`). A saved creative is only shown while its
+  concept's strategy fingerprint still matches.
+- The older CreativeVersion / VISUAL_DIRECTION_STRATEGIES / demo_assets
+  path is unchanged and unused by Creative Lab's default flow.

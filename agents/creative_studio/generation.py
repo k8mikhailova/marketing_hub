@@ -44,12 +44,13 @@ GeneratedCreative differs.
 import os
 import re
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable
 
 from agents.creative_studio.engine import CreativeVersion
+from agents.creative_studio.execution import AdExecutionSpec
 from agents.creative_studio.image_provider import (
     DEFAULT_QUALITY,
     DEFAULT_SIZE,
@@ -152,6 +153,19 @@ class GeneratedCreative:
     generated_at: str
     prompt: str
     generation_source: str = "live"
+    # Milestone 27 (Creative Studio V3): a finished ad keeps its structured
+    # execution spec (copy, strategy, experiment fields) SEPARATE from the
+    # image, plus versioning and reference provenance. All optional with
+    # defaults so the older CreativeVersion-based flow (and demo_assets.py)
+    # keeps constructing this object unchanged. generation_source is "live"
+    # when a provider call just produced it and "saved" when it was loaded
+    # from disk: the SAME representation either way.
+    ad_spec: AdExecutionSpec | None = None
+    version: int = 1
+    creative_key: str = ""
+    plan_fingerprint: str = ""
+    reference_asset_paths: list[str] = field(default_factory=list)
+    data_type: str = ""
 
 
 def build_generation_request(
@@ -249,6 +263,124 @@ def build_prompt(request: GenerationRequest) -> str:
     if request.brand_context:
         sections.append(f"BRAND CONTEXT:\n{request.brand_context}")
     return "\n\n".join(sections)
+
+
+def build_ad_prompt(spec: AdExecutionSpec, reference_available: bool, brand_context: str = "") -> str:
+    """The image-generation prompt for ONE finished ad, built entirely from
+    an already-validated AdExecutionSpec (no theme, product or copy is
+    hardcoded here). The image model is told EXACTLY which words to render;
+    it is never asked to invent strategy or copy. Only the short on-image
+    headline is printed in the image: the primary text, Meta headline,
+    description and CTA live outside it and are deliberately absent from
+    this prompt. Sections: BRAND / PRODUCT, AUDIENCE, STRATEGIC CONCEPT,
+    MESSAGE TO COMMUNICATE, EXACT ON-IMAGE COPY, VISUAL DIRECTION, REFERENCE
+    IMAGE GUIDANCE, MUST PRESERVE, MUST AVOID. Meant for a details/debug
+    view, not the default marketer UI.
+    """
+    brand = f"Product: {spec.required_product}\nApproved proof to stay consistent with: {spec.proof_to_preserve}"
+    if brand_context:
+        brand += f"\n{brand_context}"
+    reference = (
+        "The attached image is a reference for the product's real appearance and the brand's visual identity ONLY. "
+        "Keep the product design and packaging recognizable. Do NOT reproduce the reference ad's composition, "
+        "layout, background, text or any wording it contains; create a new ad for this concept."
+        if reference_available
+        else "No reference image is attached. Depict the product plainly and generically; do not invent specific "
+        "product design details, logos or packaging text."
+    )
+    sections = [
+        "You are creating ONE finished paid-social ad image for one arm of a controlled creative experiment. It must "
+        "read as a real, polished ad, and it must clearly express the strategic concept below.",
+        f"BRAND / PRODUCT\n{brand}",
+        f"AUDIENCE\n{spec.avatar}\nAwareness stage: {spec.awareness_stage}\nFunnel stage: {spec.funnel_stage}",
+        f"STRATEGIC CONCEPT\n{spec.concept_name}: {spec.messaging_angle}\nWhy this concept exists: {spec.strategic_intent}",
+        f"MESSAGE TO COMMUNICATE\nThe customer concern is: {spec.customer_theme}. Express the concept above through "
+        "the image and the on-image headline; the image is one execution of that idea, not a generic product shot.",
+        "EXACT ON-IMAGE COPY - DO NOT REWRITE OR PARAPHRASE\n"
+        f"Headline:\n{spec.on_image_headline}\n\nReproduce this text exactly as written, character for character, "
+        "in legible, intentional marketing typography. Include ONLY this text in the image: no other words, "
+        "numbers, logos, badges, prices or claims.",
+        f"VISUAL DIRECTION\n{spec.visual_direction}",
+        f"REFERENCE IMAGE GUIDANCE\n{reference}",
+        "MUST PRESERVE\n" + "\n".join(f"- {c}" for c in spec.constants_preserved),
+        "MUST AVOID\n" + "\n".join(f"- {c}" for c in spec.prohibited_claims),
+    ]
+    return "\n\n".join(sections)
+
+
+def generate_ad_creative(
+    spec: AdExecutionSpec,
+    provider: ImageGenerationProvider,
+    reference_image_path: Path | None,
+    *,
+    version: int = 1,
+    creative_key: str = "",
+    plan_fingerprint: str = "",
+    batch_id: str = "",
+) -> GeneratedCreative:
+    """Render ONE AdExecutionSpec into a finished ad image and persist it
+    (image plus a JSON sidecar holding the full spec, prompt, versioning and
+    provenance) via core.assets.save_generated_asset, which never
+    overwrites and never touches source_ads/. Exactly one provider call.
+    The sidecar records provider/model and NEVER any credential.
+
+    Raises ImageGenerationError for any provider or storage failure.
+    """
+    prompt = build_ad_prompt(spec, reference_image_path is not None, creative_context(spec.client_id))
+    result = provider.generate_image(prompt, reference_image_path, size=DEFAULT_SIZE, quality=DEFAULT_QUALITY)
+
+    generated_id = _generated_id(spec.concept_id)
+    generated_at = datetime.now(timezone.utc).isoformat()
+    references = [str(reference_image_path)] if reference_image_path is not None else []
+    metadata = {
+        "record_type": "ad_creative_v3",
+        "generated_id": generated_id,
+        "client_id": spec.client_id,
+        "proposal_id": spec.opportunity_id,
+        "concept_id": spec.concept_id,
+        "control_creative_id": spec.reference_creative_id,
+        "batch_id": batch_id,
+        "version": version,
+        "creative_key": creative_key,
+        "plan_fingerprint": plan_fingerprint,
+        "ad_spec": spec.to_dict(),
+        "reference_asset_paths": references,
+        "provider": result.provider,
+        "model": result.model,
+        "generated_at": generated_at,
+        "prompt": prompt,
+        "revised_prompt": result.revised_prompt,
+        "data_type": spec.data_type,
+        "generation_source": "live",
+    }
+    try:
+        image_path, metadata_path = save_generated_asset(
+            spec.client_id, generated_id, result.image_bytes, result.output_format, metadata
+        )
+    except OSError as exc:
+        raise ImageGenerationError(f"Could not save the generated image: {exc}")
+
+    return GeneratedCreative(
+        generated_id=generated_id,
+        proposal_id=spec.opportunity_id,
+        concept_id=spec.concept_id,
+        control_creative_id=spec.reference_creative_id,
+        client_id=spec.client_id,
+        batch_id=batch_id,
+        image_path=image_path,
+        metadata_path=metadata_path,
+        provider=result.provider,
+        model=result.model,
+        generated_at=generated_at,
+        prompt=prompt,
+        generation_source="live",
+        ad_spec=spec,
+        version=version,
+        creative_key=creative_key,
+        plan_fingerprint=plan_fingerprint,
+        reference_asset_paths=references,
+        data_type=spec.data_type,
+    )
 
 
 def _generated_id(concept_id: str) -> str:

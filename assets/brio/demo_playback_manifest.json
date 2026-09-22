@@ -1,0 +1,43 @@
+{
+  "client_id": "brio",
+  "note": "Milestone 28: a deterministic mapping from each Creative Concept to the exact GeneratedCreative produced by a successful CREATIVE_GENERATION_MODE=live run, for reliable demo playback. References existing files under assets/brio/generated/ by id; does not duplicate image bytes and contains no credentials. See agents/creative_studio/demo_playback.py.",
+  "created_at": "2026-09-22T21:20:00Z",
+  "concepts": {
+    "concept::opportunity::emerging_opportunity::taste_and_odor::problem_recognition": {
+      "generated_id": "concept_opportunity_emerging_opportunity_taste_and_odor_problem_recognition_20260922T211001Z_9a493016",
+      "proposal_id": "opportunity::emerging_opportunity::taste_and_odor",
+      "version": 1,
+      "plan_fingerprint": "172be2c8234a4e07"
+    },
+    "concept::opportunity::emerging_opportunity::taste_and_odor::desired_outcome": {
+      "generated_id": "concept_opportunity_emerging_opportunity_taste_and_odor_desired_outcome_20260922T211027Z_f025fc08",
+      "proposal_id": "opportunity::emerging_opportunity::taste_and_odor",
+      "version": 1,
+      "plan_fingerprint": "1eefe9a5cd43836d"
+    },
+    "concept::opportunity::emerging_opportunity::taste_and_odor::proof_led": {
+      "generated_id": "concept_opportunity_emerging_opportunity_taste_and_odor_proof_led_20260922T211050Z_3964677e",
+      "proposal_id": "opportunity::emerging_opportunity::taste_and_odor",
+      "version": 1,
+      "plan_fingerprint": "df7c02b953a9d41b"
+    },
+    "concept::opportunity::messaging_gap::bottled_water_frustration::problem_recognition": {
+      "generated_id": "concept_opportunity_messaging_gap_bottled_water_frustration_problem_recognition_20260922T211113Z_d2e28b3c",
+      "proposal_id": "opportunity::messaging_gap::bottled_water_frustration",
+      "version": 1,
+      "plan_fingerprint": "c2386941b1474339"
+    },
+    "concept::opportunity::messaging_gap::bottled_water_frustration::desired_outcome": {
+      "generated_id": "concept_opportunity_messaging_gap_bottled_water_frustration_desired_outcome_20260922T211155Z_16d43f65",
+      "proposal_id": "opportunity::messaging_gap::bottled_water_frustration",
+      "version": 1,
+      "plan_fingerprint": "3a289dc32b57bc6d"
+    },
+    "concept::opportunity::messaging_gap::bottled_water_frustration::proof_led": {
+      "generated_id": "concept_opportunity_messaging_gap_bottled_water_frustration_proof_led_20260922T211217Z_acdf68fa",
+      "proposal_id": "opportunity::messaging_gap::bottled_water_frustration",
+      "version": 1,
+      "plan_fingerprint": "473b04d43fa95d0c"
+    }
+  }
+}

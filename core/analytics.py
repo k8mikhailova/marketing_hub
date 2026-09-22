@@ -224,6 +224,48 @@ def theme_movement(
     return counts, True
 
 
+# A theme must gain at least this many signals versus the prior period to be
+# called out as increasing: a noise floor so a 1-to-2 wobble is never
+# presented as a trend (the same "never rest a claim on a handful of rows"
+# philosophy as this module's other named floors). Intentionally smaller than
+# the Intelligence Agent's EMERGING_MIN_CHANGE: this is a plain description
+# of the chart, not a formal finding.
+THEME_TAKEAWAY_MIN_CHANGE = 3
+
+
+def theme_takeaway(
+    theme_table: pd.DataFrame,
+    movement_available: bool,
+    min_change: int = THEME_TAKEAWAY_MIN_CHANGE,
+    theme_col: str = "demo_theme_label",
+) -> dict:
+    """What to notice in a theme_movement table, derived only from that
+    table (so it always reflects the selected period, product and source
+    filters): the theme with the largest increase versus the prior period,
+    if any increase clears `min_change`.
+
+    Returns {"status": ...}: "increase" (plus theme, previous_count,
+    signal_count, change), "no_increase" (movement is known and no theme
+    rose by at least min_change), or "insufficient_history" (no full prior
+    period exists, so no comparison is invented). Ties on change break
+    deterministically: higher current count first, then theme name A to Z.
+    Names no theme; works for any dataset.
+    """
+    if not movement_available or "change" not in theme_table.columns:
+        return {"status": "insufficient_history"}
+    risers = theme_table[theme_table["change"] >= min_change]
+    if risers.empty:
+        return {"status": "no_increase"}
+    top = risers.sort_values(["change", "signal_count", theme_col], ascending=[False, False, True], kind="mergesort").iloc[0]
+    return {
+        "status": "increase",
+        "theme": str(top[theme_col]),
+        "previous_count": int(top["previous_count"]),
+        "signal_count": int(top["signal_count"]),
+        "change": int(top["change"]),
+    }
+
+
 THEME_PRODUCT_MIN_SIGNALS = 3  # a product needs at least this many mentions of a theme to count as "associated"
 
 

@@ -86,7 +86,7 @@ def cross_cutting_context_note(finding: Finding) -> str:
         f"{finding.summary} {finding.why_it_matters} For this plan: recognizable, natural customer language is "
         "used as a general tone cue where a concept's own angle calls for it, but this pattern is supporting "
         "context from one specific product and funnel stage, not proof that customer-language messaging wins in a "
-        "different context, so it never substitutes for a family's own evidence."
+        "different context, so it never substitutes for a creative opportunity's own evidence."
     )
 
 
@@ -106,7 +106,7 @@ def _strategist_summary(families: list[CreativeFamily], cross_cutting: Finding |
         detail = cross_cutting.summary[0].lower() + cross_cutting.summary[1:]
         summary += (
             f" Separately, {detail} That pattern is carried into this plan as supporting context for tone, not "
-            "as a reason to add a third family."
+            "as a reason to add another creative opportunity."
         )
     return summary
 

@@ -16,7 +16,6 @@ import altair as alt
 import streamlit as st
 
 from agents.intelligence.engine import (
-    EXPERIMENT_WORTHY_TYPES,
     PERFORMANCE_MIN_PURCHASES,
     PERFORMANCE_MIN_SPEND,
     generate_findings,
@@ -34,50 +33,25 @@ def _humanize(value: str) -> str:
     return value.replace("_", " ")
 
 
-def _jump_to_performance_patterns(product: str) -> None:
-    """Milestone 20, Part 6: a state-assisted "next action" for a finding
-    that isn't experiment-worthy (Performance Pattern), since Streamlit's
-    st.page_link can't reliably anchor-scroll to a section on the SAME
-    page (confirmed: appending a URL fragment fails the same path
-    validation that produces "Could not find page"). This is simpler and
-    actually more useful than a scroll: it pre-filters the Creative
-    performance patterns section below to the SAME product this finding
-    is about (finding.products[0], already-existing data, never a new
-    computation), the same session-state-prefill pattern Customer Signals
-    already uses for its own theme filter.
-    """
-    st.session_state["intel_perf_product"] = product
-
-
 def _render_brief_item(number: int, finding) -> None:
-    """One entry in the Insights Brief (Milestone 19 Part 3, hierarchy
-    strengthened in Milestone 20 Part 5): a visually-noticeable (not
-    enormous) number beside a real type badge, the finding's own title as
-    the dominant element, summary/why_it_matters visually quieter, then
-    intentional space before the action row. Deliberately not a card:
-    these are 3 ranked conclusions from one analyst brief, not 3 unrelated
-    products to compare side by side, so there is no border, no forced
-    equal height, and no "primary" accent strip on the first one (a
-    genuine finding, not a UI selection state, doesn't need one).
+    """One finding as a bounded intelligence object (Milestone 26): a quiet
+    card holding an eyebrow (ordinal + category badge), the title as the
+    strongest element, the summary as normal body text, a small-labeled WHY
+    IT MATTERS note, and the evidence, still progressively disclosed. The
+    shared rhythm card (core/ui.py) gives it the same padding and spacing
+    language as Overview's compact previews, so Overview reads as the
+    preview and this page as the expanded analysis. Cards establish the
+    separation, so there are no dividers between findings.
 
-    Every top finding gets SOME clear next action (Part 6): experiment-
-    worthy types keep "Develop experiment"; a Performance Pattern finding
-    (never experiment-worthy, by the Intelligence Agent's own classifier,
-    unchanged) gets "View performance" instead of nothing, so it never
-    reads as broken next to the other two.
+    A finding is EVIDENCE, not a thing to act on (Milestone 24): it has no
+    "Develop experiment"/"Develop creative"/"View performance" action. The
+    only action is "View evidence"; the one path into Creative Lab is the
+    single "Build Creative Plan" call to action at the very bottom of the
+    page, after the supporting analysis.
     """
-    num_col, badge_col = st.columns([0.5, 5])
-    with num_col:
-        st.markdown(f'<div class="ui-finding-number">{number:02d}</div>', unsafe_allow_html=True)
-    with badge_col:
-        ui.badge_row([finding.type.upper()])
-    st.markdown(f"#### {finding.title}")
-    st.write(finding.summary)
-    ui.muted(finding.why_it_matters)
-
-    st.markdown('<div style="height:0.6rem"></div>', unsafe_allow_html=True)
-    action_col, develop_col = st.columns([1, 1])
-    with action_col:
+    with ui.card("standard", rhythm=True):
+        ui.numbered_badge(number, finding.type.upper())
+        ui.titled_summary(finding.title, finding.summary, "Why it matters", finding.why_it_matters)
         with st.expander("View evidence"):
             st.caption(f"{finding.confidence.capitalize()} confidence")
             for e in finding.evidence:
@@ -86,20 +60,25 @@ def _render_brief_item(number: int, finding) -> None:
                 st.caption(f"Source: {e.source}")
                 if e.table is not None:
                     st.dataframe(e.table, hide_index=True, use_container_width=True)
-    with develop_col:
-        if finding.type in EXPERIMENT_WORTHY_TYPES:
-            # Milestone 22 (Creative Lab V2, small compatibility change):
-            # Creative Lab no longer opens to one selected finding's
-            # experiment stage, it always shows the full Creative Plan (the
-            # Strategist's synthesis of every current finding at once), so
-            # this no longer needs to stash which finding was clicked.
-            if st.button("Develop experiment", type="primary", key=f"develop_{finding.finding_id}"):
-                st.switch_page("app_pages/creative_lab.py")
-        elif finding.products:
-            st.button(
-                "View performance", key=f"view_perf_{finding.finding_id}",
-                on_click=_jump_to_performance_patterns, args=(finding.products[0],),
-            )
+
+
+def _render_from_insight_to_creative() -> None:
+    """The ONE transition from Insights into Creative Lab, placed at the very
+    bottom of the page so the marketer can review the whole brief, every
+    finding's evidence, AND the supporting analysis before moving on. Not
+    tied to any single finding and requiring no selection. Deliberately
+    calm (a plain section heading and one primary button, not a
+    conversion-style banner). Uses st.button + st.switch_page (not
+    st.page_link) so the page renders identically inside the multi-page app
+    or in isolation.
+    """
+    ui.section_header(
+        "From insight to creative",
+        "The Creative Strategist combines these findings with customer signals, current creative coverage, "
+        "and performance context to build the next creative plan.",
+    )
+    if st.button("Build Creative Plan", type="primary", key="build_creative_plan"):
+        st.switch_page("app_pages/creative_lab.py")
 
 
 client = current_client()
@@ -122,8 +101,6 @@ if not findings:
 else:
     for i, finding in enumerate(findings):
         _render_brief_item(i + 1, finding)
-        if i < len(findings) - 1:
-            st.divider()
 
 st.divider()
 
@@ -263,3 +240,8 @@ with ui.card("standard"):
             "Highlighted rows lead their funnel stage on both ROAS and CTR with enough volume to trust the "
             'comparison. "Limited" sample rows are shown for completeness, not as a reliable pattern.'
         )
+
+# --- 3. From insight to creative: the single way forward, AFTER all evidence --
+if findings:
+    st.divider()
+    _render_from_insight_to_creative()

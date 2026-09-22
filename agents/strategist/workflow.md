@@ -1,8 +1,16 @@
 # Creative Strategist Agent: Workflow
 
-1. Triggered by a marketer clicking "Develop experiment" on a Marketing
-   Intelligence finding, or by choosing one directly from Creative Lab's
-   own list of experiment-worthy findings.
+0. Since Milestone 24, the default trigger is NOT a per-finding action:
+   Insights shows findings as evidence only and offers one "Build Creative
+   Plan" call to action that opens Creative Lab, which runs
+   `agents/strategist/creative_plan.py::build_creative_plan` over ALL
+   current findings at once (no finding is selected by the marketer). The
+   numbered steps below describe the single-finding `generate_proposal`
+   path, which is unchanged and still callable.
+1. (Legacy single-finding trigger.) A marketer clicked "Develop experiment"
+   on a Marketing Intelligence finding, or chose one from Creative Lab's
+   own list of experiment-worthy findings. Neither control exists in the
+   product any more.
 2. Resolve the Finding by id (`generate_findings`), and confirm it is an
    experiment-worthy type.
 3. Pick the primary product and its funnel stage

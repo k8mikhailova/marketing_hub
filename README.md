@@ -5,8 +5,13 @@ incremental portfolio/demo project. This README is the source of truth for the
 project's intent, architecture, and rules. Read it before making any structural
 changes.
 
-**Current status: Milestone 23 (Experiments V2: multi-arm concept
-experiments, no mandatory baseline) complete**, on top of Milestone 22
+**Current status: Milestone 28.3 (restored pre-generation Creative Lab
+presentation) complete**, on top of Milestone 28.2 (fresh-run demo
+presentation), Milestone 28.1 (demo generation playback), Milestone 28
+(Creative Studio V3), and Milestone 27 (final core UI polish), on top of Milestone 25 (product-model consistency pass across
+Overview, Insights, Creative Lab, Experiments), on top of Milestone 24 (Experiments visual polish + Insights
+workflow correction) and Milestone 23 (Experiments V2:
+multi-arm concept experiments, no mandatory baseline), on top of Milestone 22
 (Creative Lab V2: Creative Plan redesign) and an unlogged product-wide
 UX/design-system pass
 (navigation reorder to Overview -> Customer Signals -> Insights -> Creative
@@ -787,8 +792,10 @@ package and moves to the Creatives stage (see "How Creative Studio works"
 below). "← Back to opportunities" / "← Back to experiment" navigate
 without destroying useful state (see below).
 
-Arriving via Marketing Intelligence's "Develop experiment" button
-(`st.session_state["clab_source_finding_id"]`) loads that finding directly
+(Historical, removed in Milestone 24: Insights no longer has a per-finding
+"Develop experiment" button; see §11.) Arriving via Marketing Intelligence's
+"Develop experiment" button
+(`st.session_state["clab_source_finding_id"]`) loaded that finding directly
 into the Experiment stage. Visiting Creative Lab from the sidebar with no
 such key shows the Opportunity stage: every current experiment-worthy
 finding as a compact card (a couple of best-effort stats pulled from
@@ -2958,6 +2965,367 @@ committed spec beyond Milestone 1.
   future Save Learning step could promote it, but nothing does so
   automatically); Manager Agent/Ask Hub/Agent Activity/agent-personality
   work.
+- **Milestone 23.1 (done): Experiments V2 UX correction pass, no logic change.**
+  Layout: `core/ui.py` gained `field_grid` (label/value fields as ONE
+  auto-fit grid element: values wrap, rows stay top-aligned, reflows at
+  narrow widths) and `comparison_table` (responsive HTML table that
+  scrolls horizontally inside its own container), used for Test setup, the
+  hypothesis, the historical-reference values, and the results comparison
+  in place of per-value `st.columns` cells and `st.metric` tiles (whose
+  labels ellipsis-truncate). Root cause of the cramped/misaligned
+  label-value pairs: the shared "pin a card's last child to the bottom"
+  CSS also matched columns nested INSIDE a card, bottom-aligning short
+  values under taller neighbours; it is now scoped to a card's own
+  content (`:not([data-testid="column"] > div[data-testid="stVerticalBlock"])`). (CORRECTION, Milestone 25: that selector assumed the wrong DOM and never matched; see Milestone 25.)
+  `.ui-badge` now wraps instead of overflowing a narrow card. No fixed
+  heights added; no wording shortened.
+  Scroll: `ui.request_scroll_to_top()` (called only from the Run/Reset Demo
+  Test `on_click` callbacks) sets a session-state flag with an incrementing
+  counter; `ui.apply_pending_scroll_to_top()` (called once at a fixed spot
+  on every run) always reserves an `st.empty()` slot (display:none), pops
+  the flag, and only then renders a zero-height `components.html` iframe
+  whose script scrolls `section.main` (Streamlit's scroll container,
+  confirmed in the 1.37 bundle) to 0 in three bounded attempts, never a
+  loop. The counter in the payload keeps back-to-back requests from being
+  byte-identical (which Streamlit would not re-execute). The reserved slot
+  keeps every later element, notably the `st.tabs` block whose active tab
+  Streamlit tracks by position, at the same index whether or not a scroll
+  is pending. Verified by `AppTest` for both experiments (run and reset):
+  one iframe on each transition, none on ordinary reruns, flag consumed,
+  independent state. Not verifiable without a browser: the actual pixel
+  scroll and tab persistence in a real Chrome/Safari session.
+- **Milestone 24 (done): Experiments visual polish + Insights workflow
+  correction. No experiment/simulation/Performance Agent/Creative Lab logic
+  changed.**
+  Spacing root cause (confirmed in the 1.37 bundle, not guessed): Streamlit
+  gives every markdown container `margin-bottom: -1rem` to cancel the 1rem
+  `<p>` margin it assumes. This project's raw-HTML helpers (`muted`,
+  `badge_row`, the field grid, the table) contain no `<p>`, so each lost 1rem
+  after it: the last line of a card hugged the bottom border, adjacent HTML
+  lines had zero gap, and "What we tested" sat flush against the next box.
+  Streamlit's own markdown `table` rules (outer border, 1px `tr`
+  border-top, th/td borders, 1rem bottom margin) were the line above the
+  performance table's header.
+  `core/ui.py`: opt-in `card(..., rhythm=True)` (Creative Lab is untouched)
+  neutralizes the -1rem, `<p>` and heading padding inside the card, uses one
+  0.75rem gap, equal 1.15rem/1.25rem padding, and draws the primary accent
+  as a top border instead of a separate negative-margin strip (a zero-size
+  marker element the CSS keys on with `:has()`, hidden so it takes no gap);
+  new `text_stack` (primary + quieter line as ONE element), `supporting_text`
+  (readable 1rem line with a deliberate section gap, replacing the tiny
+  muted "What we tested"), and `note` (small text that keeps normal spacing
+  after it); `field_grid`/`comparison_table` compensate at page level and
+  reset inside rhythm cards; `.ui-table` now resets Streamlit's table border,
+  `tr` border-top and margin, keeping only the header underline and light
+  row separators. All Experiments cards (Test setup, results hero, table,
+  What we learned, next test, proposed learning) use it; the table caption
+  and expander note use `note`. No fixed heights.
+  Insights: every finding keeps its summary and "View evidence"; the
+  finding-level "Develop experiment" and Performance Pattern "View
+  performance" buttons (and `_jump_to_performance_patterns`) are removed,
+  since a finding is evidence and the Strategist synthesizes all of them. One
+  "Ready to act on these insights?" card after the brief, with a primary
+  "Build Creative Plan" button (`st.button` + `st.switch_page`, no selection
+  step), leads into Creative Lab. Overview's own per-insight CTAs were out
+  of scope and are unchanged.
+- **Milestone 25 (done): product-model consistency pass. No finding,
+  Creative Plan, concept, handoff, simulation, Performance Agent or learning
+  logic changed.**
+  Root cause of the Creative Lab Strategy misalignment (and a correction to
+  Milestone 24): Streamlit renders EVERY vertical block, a column's included,
+  as `stVerticalBlockBorderWrapper > div > stVerticalBlock` (confirmed in the
+  1.37 bundle). Milestone 24's exclusion of column content from the "pin a
+  card's last child to the bottom" rule used a direct-child selector
+  (`column > stVerticalBlock`) and so never matched; the row still stretched
+  every column to the tallest value (a wrapped Avatar) and the rule pushed
+  each shorter column's value to the bottom, far below its label. The test at
+  the time only compared the CSS string. Fixed in `core/ui.py` with the real
+  chain (`column > wrapper > div > stVerticalBlock`), and the inert
+  direct-child flex rule was removed. The new suite evaluates the shipped
+  selector with `soupsieve` against a synthetic copy of Streamlit's real
+  nesting: column content is not pinned, a card's own footer (also inside a
+  column) still is, and the old selector is shown to have matched (so the
+  test would have caught the bug). Creative Lab's Strategy fields now also
+  use the shared `ui.field_grid` (one grid element, `align-items: start`);
+  equal-height concept cards and their footers are unaffected.
+  `ui.grouped_field_grid` (new, shares `field_grid`'s cell rendering) powers
+  the Experiments "Test setup": Context (Product, Audience, Funnel stage),
+  Test design (Variable we're testing, Primary metric, Supporting metrics),
+  Keeping consistent, in one rhythm card with a light rule between groups;
+  every value top-aligns under its label and a wrapping Audience cannot push
+  another value down. No information removed.
+  Insights: the transition was renamed "From insight to creative" (same
+  supporting copy, same "Build Creative Plan" button, still the only
+  workflow action, still no selection) and moved to the true bottom of the
+  page, after the Supporting analysis charts and tables.
+  Overview: "What needs your attention" is an executive summary. The
+  per-item actions (Explore opportunity, Develop creative, View performance,
+  Review experiment) are gone; one quiet section-level "View Insights" link
+  remains. Items keep their real evidence and "View evidence" expanders:
+  Customer/Emerging signal, Creative gap (was "Creative opportunity"; its
+  why-line states the observation instead of the insight's imperative
+  "Test a ... concept"), Performance context (was "Performance pattern"),
+  plus an Experiment learning item per experiment finished this session
+  (the old item read the removed singular `experiment_handoff` key and could
+  never appear; it now reads `experiment_handoffs`/`experiment_analyses`),
+  capped at 4 items. (The inconsistency noted here, Overview
+  reading `core.insights` while Insights used the Intelligence Agent, was
+  resolved in Milestone 26.)
+- **Milestone 26 (done): the Intelligence Agent is the single source of
+  truth for marketer-facing findings. No detector, threshold, finding,
+  Creative Plan, experiment or Performance Agent logic changed.**
+  Why Overview differed: it was built in Milestone 18 on `core/insights.py`
+  (`emerging_signal`, `next_opportunity`, `winning_pattern`), a
+  pre-Intelligence-Agent preview layer that predates `agents/intelligence/
+  engine.py` and applies its own, looser rules (e.g. it named "Routine /
+  ease vs Convenience" for Bottom Load Dispensers MOF, while the Agent's
+  Performance Pattern is customer-language messaging for Q60 MOF). Insights
+  (`intelligence.py`) and Creative Lab (via `creative_plan.py`) already
+  called `generate_findings(client_id, max_findings=3)`; Overview was the
+  only consumer of the old layer.
+  Now `app_pages/overview.py` calls that same function. "What needs your
+  attention" shows each current Finding as its own badge (the Finding's
+  type, the same badge Insights shows), its title and its one-sentence
+  summary, in the Agent's own order, with no evidence, confidence or action
+  (Insights answers "why"; Overview answers "what"). Experiment learnings
+  finished this session (Performance Agent output) appear in a separately
+  labeled "Recent experiment learning" group AFTER all current findings, at
+  most 2, so they never displace a finding (the Milestone 25 cap of 4 items
+  could have). One quiet "View Insights" link remains; no per-finding
+  action returned. Overview no longer imports `core.insights`; nothing in
+  the repo does. `core/insights.py` was NOT deleted or edited: it is now
+  legacy/unreferenced code, still cited in comments in `core/
+  creative_coverage.py` and `agents/intelligence/engine.py` and in
+  historical README sections, awaiting a decision before removal.
+- **Milestone 26.1 (done): Overview "What needs your attention"
+  presentation cleanup. Presentation only: still the same Intelligence Agent
+  Finding objects as Insights and Creative Lab.**
+  Order: Overview alone shows the findings as Emerging Opportunity ->
+  Messaging Gap -> Performance Pattern (customer signal, creative gap,
+  performance context). Implemented as `_overview_order`, a stable sort of a
+  copy of the Agent's list keyed by `Finding.type` via `OVERVIEW_TYPE_ORDER`
+  (no ids or titles); unlisted types keep the Agent's order after the listed
+  ones, absent types are simply not rendered. The Agent's priority order,
+  which Insights and the Creative Plan use, is untouched (Insights still
+  shows Performance Pattern first).
+  Cards: each finding is a `ui.card("standard", rhythm=True, soft=True)`
+  (shared rhythm card plus a new opt-in quiet background tint) holding the
+  category badge and `ui.text_stack(title, summary)`, title strongest,
+  summary secondary. The divider-separated text blocks are gone; no
+  per-card actions; `text_stack` now writes `$` as an entity so currency
+  never pairs into a LaTeX span. Experiment learnings use the same card
+  language in their own "Recent experiment learning" group after the
+  findings (max 2, absent when none, no reserved space). One quiet "View
+  Insights" link ends the section.
+  Subtitle is state-aware: without a completed experiment it reads "...across
+  customer conversation, creative coverage, and performance."; once an
+  experiment has been run this session it adds "experiments".
+- **Milestone 27 (done): final core UI polish before creative generation.
+  Presentation plus one derived sentence; no agent, finding, Creative Plan,
+  experiment or data logic changed.**
+  Insights: each finding is now a bounded `ui.card("standard", rhythm=True)`:
+  an eyebrow (`ui.numbered_badge`: quiet ordinal + category badge), then
+  `ui.titled_summary` (title strongest at 1.25rem/700, summary at body size,
+  a small-labeled WHY IT MATTERS note), then the unchanged "View evidence"
+  expander. The dividers between findings are gone; order, text, evidence,
+  confidence, Supporting analysis and the bottom "From insight to creative"
+  are unchanged. Overview stays the compact preview.
+  Creative Lab: the Creative Opportunity card reads as a story: one grouped
+  grid holding "Why this is in the plan" and "Strategy" (Avatar, Awareness
+  stage, Pain point, still top-aligned), then the learning question
+  (`opportunity.what_we_want_to_learn`, unchanged text) as the one emphasized
+  `ui.callout`, then "Test design" with the display labels "Changing" (was
+  "Variable to test") and "Keeping consistent" (was "Keeping relatively
+  constant"), same structured values, then a "Creative concepts" heading over
+  the unchanged concept row.
+  Customer Signals: a "What to notice" callout (`ui.callout`, a left accent
+  rule, not a card) sits directly above the theme chart. It is derived by
+  `core.analytics.theme_takeaway` from the SAME `theme_movement` table the
+  chart uses, so it follows the Period, Product and Source filters: the theme
+  with the largest increase versus the prior equal-length period, clearing a
+  named noise floor of 3 signals (`THEME_TAKEAWAY_MIN_CHANGE`); ties break by
+  higher current count then theme name A to Z; "No customer theme increased
+  meaningfully during this period." when none clears the floor; "There isn't
+  enough prior-period data to identify a movement trend yet." when no full
+  prior period exists (it is never invented). It names no theme in code.
+  Display names: `ui.theme_label` (sentence case, display only) is the one
+  form of a theme name; Experiments previously title-cased it ("Taste &
+  Odor") in tab labels and titles while every other page showed it as stored.
+  Stored values, ids and matching are untouched. Known and left alone:
+  Creative Studio's generated concept HEADLINE copy still uses
+  `theme.title()` ("Built So Taste & Odor Isn't a Thing"); that is agent
+  output whose quality is explicitly deferred to model-generated copy.
+- **Milestone 28 (done): Creative Studio V3, finished ads generated in
+  Creative Lab and tested exactly as created in Experiments. No simulation,
+  Performance Agent, finding, Creative Plan or learning logic changed.**
+  Architecture (see `agents/creative_studio/agent.md` for the full
+  contract): `CreativeConcept -> AdExecutionSpec -> image request ->
+  GeneratedCreative`. New modules: `config.py` (the ONE place model ids
+  live: image `gpt-image-2.5-sunburst`, text `gpt-5.2`, env-overridable),
+  `execution.py` (`AdExecutionSpec`, the `ExecutionCopy` schema the text
+  model returns, context building from the Creative Opportunity / concept /
+  synthetic customer signals / catalog-approved proof / plan performance
+  context, and validation), `text_provider.py` (OpenAI structured output
+  behind the `TextGenerationProvider` seam), `creative_store.py` (versioned
+  persistence, strategy fingerprint, `creative_key`), `pipeline.py`
+  (orchestration and duplicate-call protection). `GeneratedCreative`,
+  `image_provider.py` and `generation.py` were extended, not replaced
+  (reference-optional generation; `build_ad_prompt` with sections BRAND /
+  PRODUCT, AUDIENCE, STRATEGIC CONCEPT, MESSAGE TO COMMUNICATE, EXACT ON-IMAGE
+  COPY, VISUAL DIRECTION, REFERENCE IMAGE GUIDANCE, MUST PRESERVE, MUST AVOID).
+  Only the short on-image headline is printed in the image; primary text,
+  Meta headline, description and CTA stay outside it as structured fields.
+  Creative Lab: each opportunity has an explicit "Generate creatives" action
+  (live mode only); cards move through not-generated / generating / ready /
+  failed states; a ready card shows the image, Primary text, Headline,
+  Description, CTA and the concept rationale; Retry and Regenerate are
+  per-card; nothing is included by default and an ungenerated concept cannot
+  be included; "Generation details" holds the prompt. Prepare hands
+  Experiments the exact generated asset ids/paths and copy; Experiments
+  renders those (`ui.render_generated_ad`) and never calls a provider. Run
+  Demo Test is left-aligned. The user-facing "third family" wording is now
+  "another creative opportunity". To generate for the first time set
+  `CREATIVE_GENERATION_MODE=live` (with `OPENAI_API_KEY`); demo mode shows
+  what live saved. Not verified in this environment: the model ids against
+  the live API, real image quality, and anything visual (no test spends money).
+- **Milestone 28.1 (done): demo generation playback, replaying the six real
+  creatives from a successful live run with zero OpenAI calls. No image
+  prompt, copy, strategy, simulation, Performance Agent, or live-mode
+  pipeline logic changed; the six saved creatives are byte-for-byte
+  untouched.**
+  New `assets/<client>/demo_playback_manifest.json`: an explicit,
+  hand-verified map from each Creative Concept's id to the specific
+  `generated_id`/`version`/`plan_fingerprint` chosen as that concept's demo
+  asset (references existing files under `generated/` by id; no image bytes
+  duplicated, no credential). New `agents/creative_studio/demo_playback.py`
+  (`resolve_playback_creative`) reads that one file and the SAME sidecar
+  JSON `creative_store.py` already reads, and returns the identical
+  `GeneratedCreative` shape with `generation_source="demo_playback"`; it
+  never imports `pipeline.py` or `text_provider.py` (the only two modules
+  that construct a provider) and never calls `OpenAI(`, verified both
+  statically (AST/source scan) and at runtime (`openai.OpenAI` patched to
+  raise if constructed, across every function in the module).
+  `app_pages/creative_lab.py`: a fresh demo-mode slot now always starts
+  `"idle"`, even though the six assets already exist on disk (the opposite
+  of Milestone 27's own demo behavior, which auto-revealed anything found by
+  a generic fingerprint-matching disk scan; that generic scan remains live
+  mode's own behavior, unchanged). Clicking "Generate creatives" marks the
+  opportunity's concepts pending exactly as live mode does, then
+  `_process_pending_demo` (a sibling of `_process_pending_live`, sharing
+  only the outer dispatcher and never importing a provider) waits a single
+  fixed `DEMO_REVEAL_DELAY_SECONDS = 2.5` for the WHOLE batch inside
+  `st.spinner(f"Creating {n} concepts...")`, then resolves each concept from
+  the manifest; a concept missing from the manifest, or whose recorded asset
+  no longer matches (wrong fingerprint, missing file), is marked
+  `"unavailable"` (a new status, distinct from `"failed"`: no provider was
+  ever called, so nothing failed) with "Saved demo creative unavailable",
+  never a live fallback and never a substituted asset; the other concepts in
+  the same click are unaffected. The delay runs only from that explicit
+  click (an ordinary rerun, checkbox, or expander never re-triggers
+  `_process_pending`, exactly as live mode already worked). Regenerate is
+  hidden in demo mode (`ui.muted("Regeneration is unavailable in demo
+  playback mode.")` instead); live mode's real Regenerate is unchanged. A
+  small "Reset demo" button (demo mode only) clears `st.session_state
+  ["clab_creatives"]` and the include checkboxes, returning every
+  opportunity to its pre-generation look for this session; it deletes
+  nothing on disk and never touches a prepared experiment.
+  After reveal, the existing Milestone 28 card (image, Primary text,
+  Headline, Description, CTA, rationale, Include checkbox, Generation
+  details) is unchanged, and "Prepare selected experiments" still hands
+  Experiments the exact same `GeneratedCreative` fields regardless of
+  whether generation_source is `"live"` or `"demo_playback"`.
+  The six real assets (verified against the live run's own metadata, not
+  assumed by filename): Taste & odor / Reverse Osmosis Systems, Bottled
+  water frustration / Q60 Countertop Dispenser, each Problem recognition /
+  Desired outcome / Proof-led, version 1. Three of the six concepts (Taste
+  & odor's) had a second, independently-generated `version: 1` file on disk
+  from what looks like a page-reload race during that run (both real,
+  different images); the manifest deliberately points at the later
+  timestamp of each pair as the canonical demo asset, and the earlier ones
+  are left on disk, untouched and unreferenced, rather than deleted.
+- **Milestone 28.2 (done): corrected the demo presentation so Creative Lab
+  feels like a genuinely fresh run, never a reveal of prior work. No cache
+  file, cached asset, strategy, Creative Plan, or live-mode logic changed;
+  this is `app_pages/creative_lab.py` presentation only.**
+  What made 28.1 feel like returning to old work: a fresh demo session's
+  slots started `"ready"` whenever a matching asset already existed on disk
+  (the same generic fingerprint-matching scan live mode still uses), so
+  demo mode only ever "hid" already-generated creatives rather than
+  starting from nothing; visible wording ("Demo playback: ...", "SAVED
+  CREATIVE UNAVAILABLE", a "· V1" suffix, "Use Regenerate to make a new
+  version") also named the underlying mechanism directly.
+  Three concepts are now kept explicitly distinct (see the module's own
+  docstring): the CREATIVE PLAN (opportunities/strategy/learning questions/
+  concepts, identical in every mode), UI GENERATION STATE (idle / pending /
+  ready / failed / unavailable, per concept, always `"idle"` on a fresh demo
+  slot regardless of disk), and the CACHED OUTPUT on disk (only ever
+  answers "which output should demo mode return," never "has the marketer
+  generated this yet"). Before generation, an opportunity now shows only
+  its strategy/plan (why it's in the plan, avatar, awareness, pain point,
+  the learning question, test design, each concept's angle and rationale)
+  with an enabled "Generate creatives" button; no image, no ad copy, no
+  version label, no "saved"/"cache"/"playback" wording anywhere. Clicking
+  it marks that opportunity's concepts pending exactly as before, then
+  `_process_pending_demo` walks a 3-step `st.status("Creating
+  creatives...", expanded=True)` ("Preparing copy and visual direction" ->
+  "Creating N ad concepts" -> "Finalizing creative set", ~0.83s each,
+  summing to the same `DEMO_REVEAL_DELAY_SECONDS = 2.5`) before revealing
+  the cached creatives; a concept the manifest can't resolve is now shown
+  with the SAME `"GENERATION FAILED"` / `"Nothing was saved for this
+  concept"` card a real live failure would show ("Something went wrong
+  generating this concept. Try again.", never the real "Saved demo creative
+  unavailable" reason, which stays in internal state for pre-presentation
+  troubleshooting only). Once an opportunity's three are ready, its
+  "Generate creatives" row disappears entirely rather than sitting there
+  disabled with a "Use Regenerate" hint; demo mode's card footer offers no
+  Regenerate at all now (live mode's is unchanged). The card's own version
+  suffix (`· V1`) only ever renders when there is genuine multi-version
+  history (`len(versions) > 1`), which demo mode, having no Regenerate,
+  never produces. "Reset demo" moved out of the top-of-page workflow into a
+  quiet "Demo controls" expander near the bottom of the page, right before
+  "Prepare experiments" finishes; what it clears is unchanged from 28.1
+  (session-state reveal/selection state only).
+  Verified as a user story, not just storage: a fresh session shows 0
+  finished cards/images/copy and 2 enabled Generate buttons; generating one
+  opportunity reveals exactly its 3 and leaves the other's button in place;
+  generating both leaves 0 Generate buttons anywhere; Reset demo returns to
+  0/0/0 and 2 buttons again, with every include-selection and error cleared
+  while the Creative Plan itself (opportunities, strategy, avatar text)
+  is provably unchanged; the whole cycle can be repeated after reset with
+  zero provider calls throughout; the experiment handoff after generation
+  still carries the exact cached `GeneratedCreative` (same ids, path, copy);
+  live mode's own generate/Regenerate/no-reset-control behavior is
+  unaffected. The six cached files and the manifest are confirmed
+  byte-identical before and after.
+- **Milestone 28.3 (done): corrected direction on 28.2's idle state.
+  `app_pages/creative_lab.py` only; no other file changed.**
+  28.2's pre-generation card was a new invention (a bare strategic angle in
+  a box titled "AD NOT GENERATED YET"). The actual prior Creative Lab
+  (Milestones 22-26, before any live generation existed on this page) never
+  had that box: its idle concept card called `render_creative_placeholder`
+  with the concept's own deterministic `headline`/`primary_text`/`cta`/
+  `reason_to_believe`, inside that function's own default box ("CREATIVE
+  PREVIEW" / "Image generation added next"). No prior git commit exists to
+  diff against (this repository has a single initial commit), so this was
+  reconstructed from the still-intact `CreativeConcept` fields Creative
+  Studio's preview layer has computed unchanged since Milestone 22. The fix
+  is the single `else:` (idle) branch of `_render_concept`, restored to that
+  exact call shape; the pending/failed/unavailable branches, the Generate
+  creatives control, the strategy/learning-question/test-design sections,
+  and every backend/pipeline/handoff piece from 28-28.2 are untouched. The
+  "Include in experiment" checkbox keeps its `disabled=status != "ready"`
+  gating: that is a data-integrity property of the new handoff contract (no
+  `GeneratedCreative` exists yet to include), not part of the old
+  presentation being restored.
+  Verified as the same user story as 28.2, now against the restored idle
+  card: a fresh or reset session shows 0 finished ads and each concept's
+  real deterministic headline/copy in a "CREATIVE PREVIEW" box (never "AD
+  NOT GENERATED YET"); generating one opportunity reveals exactly its 3
+  cached creatives and leaves the other opportunity's cards in that same old
+  idle presentation; generating both reveals all 6; Reset demo returns both
+  to the original idle presentation; zero provider calls throughout; the six
+  cached files are confirmed byte-identical before and after; live mode is
+  unaffected.
 - **Milestone 17D+ (not yet planned in detail):** Save Learning (turning
   the temporary human decision added in 17C/17C.1/17C.2 into a real,
   human-approved write to `approved_learnings.json`), Manager Agent, Ask

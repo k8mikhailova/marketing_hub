@@ -56,11 +56,16 @@ Nothing here calls the image provider, an LLM, or any paid API, or writes
 to a dataset file: Run Demo Test's "decision" is a proposed, in-session-
 only ProposedLearning (status="pending_review"), never a write to
 clients/<client>/approved_learnings.json, which stays a future,
-human-approved step. Concept arms have no image (image_path is always
-None: Creative Lab V2 never generates or reuses one for a concept this
-milestone) and render through ui.render_creative_placeholder, the same
-"Creative preview: image generation added next" placeholder Creative Lab
-itself uses, never a generated or reused demo asset.
+human-approved step.
+
+Milestone 27 (Creative Studio V3): each arm is the EXACT finished ad Creative
+Lab generated and the marketer selected: its handoff entry carries the
+generated asset's id and image path plus its primary text, headline,
+description, CTA and concept name verbatim, and this page renders those
+(ui.render_generated_ad, the same card Creative Lab uses) without
+generating, re-wording or substituting anything. This page never calls the
+image or text provider. An older handoff with no image falls back to the
+concept placeholder.
 """
 import streamlit as st
 
@@ -92,8 +97,7 @@ def _prepared_description(handoff: dict) -> str:
 def _render_learning_question(handoff: dict) -> None:
     ui.section_header("What we're trying to learn")
     st.write(handoff.get("learning_question") or handoff["hypothesis"])
-    ui.muted("Hypothesis")
-    st.caption(handoff["hypothesis"])
+    ui.field_grid([("Hypothesis", handoff["hypothesis"])], wide_labels=("Hypothesis",), quiet=True)
 
 
 def _render_test_setup(handoff: dict) -> None:
@@ -106,36 +110,51 @@ def _render_test_setup(handoff: dict) -> None:
     nothing here is recomputed or invented.
     """
     ui.section_header("Test setup")
-    with ui.card("standard"):
-        c1, c2, c3 = st.columns(3)
-        with c1:
-            ui.muted("Product")
-            st.write(handoff.get("product") or "Not specified")
-        with c2:
-            ui.muted("Audience")
-            st.write(handoff.get("avatar", "Not specified"))
-        with c3:
-            ui.muted("Funnel stage")
-            st.write(handoff.get("funnel_stage", "Not specified"))
-
-        c4, c5, c6 = st.columns(3)
-        with c4:
-            ui.muted("Variable")
-            st.write("Messaging angle")
-        with c5:
-            ui.muted("Primary metric")
-            st.write("ROAS")
-        with c6:
-            ui.muted("Supporting metrics")
-            st.write("CTR · CPA · Purchases")
-
-        ui.muted("Keeping consistent")
-        st.write(_KEEPING_CONSISTENT_LINE)
+    with ui.card("standard", rhythm=True):
+        ui.grouped_field_grid(
+            [
+                (
+                    "Context",
+                    [
+                        ("Product", handoff.get("product") or "Not specified"),
+                        ("Audience", handoff.get("avatar") or "Not specified"),
+                        ("Funnel stage", handoff.get("funnel_stage") or "Not specified"),
+                    ],
+                ),
+                (
+                    "Test design",
+                    [
+                        ("Variable we're testing", "Messaging angle"),
+                        ("Primary metric", "ROAS"),
+                        ("Supporting metrics", "CTR · CPA · Purchases"),
+                    ],
+                ),
+                ("Keeping consistent", [("", _KEEPING_CONSISTENT_LINE)]),
+            ]
+        )
 
 
 def _render_arm_card(index: int, arm: dict) -> None:
+    """One experiment arm, shown as the EXACT finished ad Creative Lab
+    created and the marketer approved: the same generated image and the same
+    primary text, headline, description and CTA, carried verbatim through the
+    handoff. Nothing is regenerated, re-worded or looked up here. A handoff
+    without an image (older sessions) falls back to the concept placeholder.
+    """
+    label = f"{_arm_letter(index)} · {arm['concept_name']}"
+    if arm.get("image_path"):
+        ui.render_generated_ad(
+            angle_label=label,
+            image_path=arm["image_path"],
+            primary_text=arm.get("primary_text", ""),
+            headline=arm.get("meta_headline") or arm.get("on_image_headline", ""),
+            description=arm.get("description", ""),
+            cta=arm.get("cta") or arm.get("on_image_cta", ""),
+            why_this_exists=arm.get("why_this_concept_exists", ""),
+        )
+        return
     ui.render_creative_placeholder(
-        angle_label=f"{_arm_letter(index)} · {arm['concept_name']}",
+        angle_label=label,
         headline=arm["on_image_headline"],
         primary_text=arm["on_image_supporting_copy"],
         cta=arm["on_image_cta"],
@@ -174,6 +193,8 @@ def _render_experiment_details(handoff: dict) -> None:
         st.markdown("**Concept arms:**")
         for index, arm in enumerate(handoff["treatment_ad_package"]["selected_creative_versions"]):
             st.markdown(f"- **{_arm_letter(index)} · {arm['concept_name']}**: {arm.get('angle', '')}")
+            if arm.get("on_image_headline"):
+                st.caption(f"On-image headline: {arm['on_image_headline']}")
             if arm.get("why_this_concept_exists"):
                 st.caption(arm["why_this_concept_exists"])
 
@@ -186,8 +207,8 @@ def _render_experiment_details(handoff: dict) -> None:
             )
             perf = reference_ad.get("historical_performance")
             if perf:
-                ui.metric_row([("Historical ROAS", f"{perf['roas']:.2f}x"), ("Historical CTR", f"{perf['ctr']:.2%}")])
-                ui.muted("Demo synthetic historical performance, shown as context only.")
+                ui.field_grid([("Historical ROAS", f"{perf['roas']:.2f}x"), ("Historical CTR", f"{perf['ctr']:.2%}")])
+                ui.note("Demo synthetic historical performance, shown as context only.")
 
 
 def _run_demo_test(client_id: str, handoff: dict) -> None:
@@ -199,6 +220,7 @@ def _run_demo_test(client_id: str, handoff: dict) -> None:
     proposal_id (Milestone 22/23), so two prepared experiments never share
     one result/analysis slot.
     """
+    ui.request_scroll_to_top()
     result = build_concept_arms_result(client_id, handoff)
     proposal_id = handoff["proposal_id"]
     st.session_state.setdefault("experiment_results", {})[proposal_id] = result
@@ -215,6 +237,7 @@ def _reset_demo_test(handoff: dict) -> None:
     reasoning as _run_demo_test: resetting one experiment never touches
     another prepared experiment's state.
     """
+    ui.request_scroll_to_top()
     handoff["status"] = "prepared"
     proposal_id = handoff["proposal_id"]
     st.session_state.get("experiment_results", {}).pop(proposal_id, None)
@@ -222,8 +245,8 @@ def _reset_demo_test(handoff: dict) -> None:
 
 
 def _render_prepared_view(client_id: str, handoff: dict) -> None:
-    ui.muted(handoff["customer_theme"].upper())
-    st.title(f"{handoff['customer_theme'].title()} messaging test")
+    ui.muted(ui.theme_label(handoff["customer_theme"]).upper())
+    st.title(f"{ui.theme_label(handoff['customer_theme'])} messaging test")
     ui.badge_row(["Ready to test"])
     st.write(_prepared_description(handoff))
 
@@ -250,13 +273,11 @@ def _render_prepared_view(client_id: str, handoff: dict) -> None:
         "These concepts are designed to primarily compare messaging angle while keeping the product, audience, "
         "funnel context, format, and CTA consistent."
     )
-    _, action_col, _ = st.columns([1, 1, 1])
-    with action_col:
-        st.button(
-            "Run Demo Test", type="primary", use_container_width=True, key=f"run_demo_test_{handoff['proposal_id']}",
-            on_click=_run_demo_test, args=(client_id, handoff),
-        )
-        st.caption("Demo test uses deterministic synthetic performance data.")
+    st.button(
+        "Run Demo Test", type="primary", key=f"run_demo_test_{handoff['proposal_id']}",
+        on_click=_run_demo_test, args=(client_id, handoff),
+    )
+    st.caption("Demo test uses deterministic synthetic performance data.")
 
 
 def _render_results_hero(handoff: dict, analysis: ConceptExperimentAnalysis) -> None:
@@ -265,13 +286,13 @@ def _render_results_hero(handoff: dict, analysis: ConceptExperimentAnalysis) -> 
     Agent's own headline, evidence-tied, never "proven"/"winner").
     """
     ui.badge_row(["Results", "Demo synthetic results"])
-    st.title(f"{handoff['customer_theme'].title()} messaging test")
-    ui.muted(f"What we tested: {analysis.learning_question}")
+    st.title(f"{ui.theme_label(handoff['customer_theme'])} messaging test")
+    ui.supporting_text(f"What we tested: {analysis.learning_question}")
 
-    with ui.card("primary"):
+    with ui.card("primary", rhythm=True):
         st.subheader(analysis.headline)
-        st.markdown(f"**Evidence:** {EVIDENCE_STRENGTH_LABELS.get(analysis.evidence_strength, analysis.evidence_strength)}")
-        st.caption(analysis.evidence_strength_reason)
+        evidence_label = EVIDENCE_STRENGTH_LABELS.get(analysis.evidence_strength, analysis.evidence_strength)
+        ui.text_stack(f"Evidence: {evidence_label}", analysis.evidence_strength_reason, bold_primary=True)
 
 
 def _render_arms_comparison(result: ExperimentResult, analysis: ConceptExperimentAnalysis) -> None:
@@ -284,25 +305,25 @@ def _render_arms_comparison(result: ExperimentResult, analysis: ConceptExperimen
     """
     ca_by_id = {ca.concept_id: ca for ca in analysis.arm_analyses}
 
-    with ui.card("standard"):
-        header = st.columns([2, 1, 1, 1, 1])
-        for col, label in zip(header, ["Concept", "ROAS", "CTR", "CPA", "Purchases"]):
-            col.caption(label)
-        st.divider()
+    rows = []
+    for arm in result.treatment_results:
+        ca = ca_by_id.get(arm.creative_id)
+        rows.append(
+            {
+                "name": arm.name,
+                "note": ca.interpretation if ca else "",
+                "cells": [
+                    f"{arm.roas:.2f}x" if arm.roas is not None else "N/A",
+                    f"{arm.ctr:.2%}" if arm.ctr is not None else "N/A",
+                    f"${arm.cpa:,.2f}" if arm.cpa is not None else "N/A",
+                    f"{arm.purchases:,}",
+                ],
+            }
+        )
+    with ui.card("standard", rhythm=True):
+        ui.comparison_table("Concept", ["ROAS", "CTR", "CPA", "Purchases"], rows)
 
-        for arm in result.treatment_results:
-            ca = ca_by_id.get(arm.creative_id)
-            row = st.columns([2, 1, 1, 1, 1])
-            with row[0]:
-                st.markdown(f"**{arm.name}**")
-                if ca:
-                    st.caption(ca.interpretation.split(".")[0] + ".")
-            row[1].write(f"{arm.roas:.2f}x" if arm.roas is not None else "N/A")
-            row[2].write(f"{arm.ctr:.2%}" if arm.ctr is not None else "N/A")
-            row[3].write(f"${arm.cpa:,.2f}" if arm.cpa is not None else "N/A")
-            row[4].write(f"{arm.purchases:,}")
-
-    ui.muted("Each concept is compared against this test's own group average, not against an existing ad.")
+    ui.note("Each concept is compared against this test's own group average, not against an existing ad.")
 
 
 def _render_learning(analysis: ConceptExperimentAnalysis) -> None:
@@ -311,9 +332,8 @@ def _render_learning(analysis: ConceptExperimentAnalysis) -> None:
     limitations, stated once, plainly.
     """
     ui.section_header("What we learned")
-    with ui.card("standard"):
-        st.write(analysis.learning_statement)
-        ui.muted(analysis.limitations)
+    with ui.card("standard", rhythm=True):
+        ui.text_stack(analysis.learning_statement, analysis.limitations)
 
 
 def _render_next_test(analysis: ConceptExperimentAnalysis) -> None:
@@ -325,16 +345,16 @@ def _render_next_test(analysis: ConceptExperimentAnalysis) -> None:
     """
     ui.section_header("What should we test next?")
     next_test = analysis.recommended_next_test
-    with ui.card("primary"):
-        st.markdown(f"**{next_test.label}**")
+    with ui.card("primary", rhythm=True):
+        ui.text_stack(next_test.label, bold_primary=True)
         st.write(next_test.rationale)
 
-    with ui.card("quiet"):
+    with ui.card("quiet", rhythm=True):
         ui.badge_row(["Proposed learning", "Pending review"])
-        st.write(analysis.learning_statement)
-        ui.muted(
+        ui.text_stack(
+            analysis.learning_statement,
             "This is a proposed learning, not an approved one: a human would need to review and approve it "
-            "before it durably informs future Creative Plans."
+            "before it durably informs future Creative Plans.",
         )
 
 
@@ -385,6 +405,7 @@ handoffs = {
 }
 
 ui.inject_base_styles()
+ui.apply_pending_scroll_to_top()
 
 if not handoffs:
     ui.page_header("Experiments", "Test creative ideas and turn the results into learnings.")
@@ -405,7 +426,7 @@ else:
         # proposal_id-keyed state, so running or resetting one can never
         # affect another (Streamlit preserves which tab is active across a
         # rerun on its own, no extra session-state bookkeeping needed).
-        tab_labels = [handoffs[pid]["customer_theme"].title() for pid in ordered_ids]
+        tab_labels = [ui.theme_label(handoffs[pid]["customer_theme"]) for pid in ordered_ids]
         tabs = st.tabs(tab_labels)
         for proposal_id, tab in zip(ordered_ids, tabs):
             with tab:

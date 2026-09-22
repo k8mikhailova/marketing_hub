@@ -8,15 +8,14 @@ reference image," nothing about what the experiment is or why. A provider
 never reinterprets a concept, never invents copy, and never decides what to
 change; it renders what generation.py's prompt already specifies.
 
-One provider is implemented: OpenAIImageProvider, using OpenAI's current
-image-editing API (images.edit with a GPT image model), verified against
-the official API reference as of this milestone, not guessed from training
-data. Model choice: "gpt-image-2.5-sunburst", the current GPT image model
-OpenAI documents as suited to editing-precision workflows (as opposed to
-gpt-image-2.5-flare, tuned for speed); GPT Image 2.5 always edits at high
-input fidelity, so no input_fidelity parameter is passed. The API returns
-image bytes as base64 (b64_json), not a URL, for every GPT image model, so
-this provider always decodes and returns raw bytes.
+One provider is implemented: OpenAIImageProvider. With a reference image it
+uses OpenAI's image-editing API (images.edit); WITHOUT one (Milestone 27:
+a concept is not forced to inherit a reference) it uses images.generate.
+Both take only parameters present in the installed openai SDK's signatures.
+The model id is NOT hardcoded here: it comes from agents/creative_studio/
+config.py (override with OPENAI_IMAGE_MODEL), the single place a model is
+named. The API returns image bytes as base64 (b64_json), not a URL, for GPT
+image models, so this provider always decodes and returns raw bytes.
 
 Adding a second provider (Google, FLUX, etc.) later means writing one more
 class with the same generate_image(prompt, reference_image_path, ...)
@@ -30,8 +29,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
 
-DEFAULT_SIZE = "1024x1024"
-DEFAULT_QUALITY = "auto"
+from agents.creative_studio.config import DEFAULT_IMAGE_QUALITY, DEFAULT_IMAGE_SIZE, image_model
+
+DEFAULT_SIZE = DEFAULT_IMAGE_SIZE
+DEFAULT_QUALITY = DEFAULT_IMAGE_QUALITY
 
 
 class ImageGenerationError(Exception):
@@ -67,7 +68,7 @@ class ImageGenerationProvider(Protocol):
     def generate_image(
         self,
         prompt: str,
-        reference_image_path: Path,
+        reference_image_path: Path | None,
         *,
         size: str = DEFAULT_SIZE,
         quality: str = DEFAULT_QUALITY,
@@ -94,7 +95,6 @@ class OpenAIImageProvider:
     """
 
     PROVIDER_NAME = "openai"
-    MODEL = "gpt-image-2.5-sunburst"
 
     def __init__(self, api_key: str | None = None):
         api_key = api_key or os.environ.get("OPENAI_API_KEY")
@@ -113,26 +113,24 @@ class OpenAIImageProvider:
     def generate_image(
         self,
         prompt: str,
-        reference_image_path: Path,
+        reference_image_path: Path | None,
         *,
         size: str = DEFAULT_SIZE,
         quality: str = DEFAULT_QUALITY,
     ) -> ProviderImageResult:
         import openai as openai_sdk
 
-        if reference_image_path is None or not Path(reference_image_path).exists():
-            raise ImageGenerationError("No control reference image is available to generate from.")
-
+        model = image_model()
         try:
-            with open(reference_image_path, "rb") as f:
-                response = self._client.images.edit(
-                    model=self.MODEL,
-                    image=f,
-                    prompt=prompt,
-                    size=size,
-                    quality=quality,
-                    n=1,
-                )
+            if reference_image_path is None:
+                response = self._client.images.generate(model=model, prompt=prompt, size=size, quality=quality, n=1)
+            else:
+                if not Path(reference_image_path).exists():
+                    raise ImageGenerationError("The reference image for this creative is no longer available.")
+                with open(reference_image_path, "rb") as f:
+                    response = self._client.images.edit(
+                        model=model, image=f, prompt=prompt, size=size, quality=quality, n=1
+                    )
         except openai_sdk.AuthenticationError:
             raise ImageGenerationError("OpenAI rejected the API key. Check OPENAI_API_KEY and try again.")
         except openai_sdk.APITimeoutError:
@@ -156,7 +154,7 @@ class OpenAIImageProvider:
             image_bytes=image_bytes,
             output_format=response.output_format or "png",
             provider=self.PROVIDER_NAME,
-            model=self.MODEL,
+            model=model,
             revised_prompt=getattr(item, "revised_prompt", None),
         )
 

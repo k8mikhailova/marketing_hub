@@ -19,10 +19,12 @@ injects ONE global stylesheet, targeting Streamlit's own stable
 already used individually, e.g. the old per-page `EQUAL_HEIGHT_CARD_CSS`
 blocks this module replaces), never a JS/component hack.
 """
+import html
 from contextlib import contextmanager
 from typing import Callable
 
 import streamlit as st
+import streamlit.components.v1 as components
 
 # One shared accent color, replacing the same hex literal ("#2f6fed")
 # copy-pasted across overview.py/signals.py/intelligence.py/experiments.py.
@@ -63,31 +65,36 @@ div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stVerticalBlock
     display: flex;
     flex-direction: column;
 }}
-div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stVerticalBlock"] > *:last-child {{
+/* Pinned to the bottom ONLY for a card's own content, never for the content
+   of a COLUMN. Streamlit renders EVERY vertical block, a column's included,
+   as stVerticalBlockBorderWrapper > div > stVerticalBlock (confirmed in the
+   1.37 bundle: the block renderer wraps all vertical blocks), so a column's
+   content block is column > wrapper > div > stVerticalBlock, not a direct
+   child of the column. The Milestone 24 exclusion used a direct-child
+   selector and therefore never matched: in a row like Avatar / Awareness
+   stage / Pain point, the row stretched every column to the tallest value's
+   height and this rule then pushed each shorter column's last child (its
+   value) to the BOTTOM, far below its own label. */
+div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stVerticalBlock"]:not([data-testid="column"] > div[data-testid="stVerticalBlockBorderWrapper"] > div > div[data-testid="stVerticalBlock"]) > *:last-child {{
     margin-top: auto;
 }}
 /* Milestone 22 UX correction: equal-height card ROWS (e.g. Creative Lab's
    3-concept comparison row, Experiments' creative gallery), not just a
-   card given an explicit fixed height. The rule above only pins a card's
-   last element to the bottom once that card already has a real height to
-   fill; these rules establish that real height by making every level
-   between one st.columns() row (stHorizontalBlock > column >
-   stVerticalBlock > stVerticalBlockBorderWrapper, confirmed against the
-   installed frontend bundle) a flex container/item that stretches to the
-   row's tallest natural-height sibling, so no pixel number is ever
-   hardcoded and longer copy simply makes every card in that row taller
-   together. Scoped to a bordered card that is a column's own top-level
-   content (a plain, card-less column, e.g. a KPI row, is untouched, since
-   it has no stVerticalBlockBorderWrapper for this to target). */
+   card given an explicit fixed height. Real DOM (1.37 bundle):
+   stHorizontalBlock > column > stVerticalBlockBorderWrapper > div >
+   stVerticalBlock > [card: stVerticalBlockBorderWrapper > div >
+   stVerticalBlock]. Streamlit's own styles already make the wrapper's inner
+   div and stVerticalBlock flex:1 columns; what was missing is the row
+   stretching each column and each wrapper (the column's own, and a card
+   inside it) to the row's tallest natural-height sibling, so no pixel
+   number is ever hardcoded and longer copy simply makes every card in that
+   row taller together. A plain, card-less column (a KPI row) is unaffected
+   in appearance: its content stays top-aligned because the pin rule above
+   excludes column content. */
 div[data-testid="stHorizontalBlock"] {{
     align-items: stretch;
 }}
 div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {{
-    display: flex;
-    flex-direction: column;
-}}
-div[data-testid="stHorizontalBlock"] > div[data-testid="column"] > div[data-testid="stVerticalBlock"] {{
-    flex: 1;
     display: flex;
     flex-direction: column;
 }}
@@ -129,7 +136,9 @@ details[data-testid="stExpander"] summary {{
     color: var(--text-color);
     opacity: 0.8;
     margin-right: 6px;
-    white-space: nowrap;
+    white-space: normal;
+    max-width: 100%;
+    overflow-wrap: anywhere;
 }}
 
 /* Part 5: the ONE primary-card accent, a thin top strip, used sparingly
@@ -231,6 +240,129 @@ button[kind="secondary"] {{
     opacity: 0.32;
     line-height: 1.3;
 }}
+
+/* Milestone 23 UX correction: label/value fields and comparison tables that
+   wrap cleanly. One grid element (not one st.columns cell per value), so a
+   value that takes two lines never leaves its neighbour's label and value
+   far apart, and the grid reflows to fewer columns at narrow widths on its
+   own. */
+.ui-fields {{
+    padding-bottom: 1rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+    gap: 1rem 1.5rem;
+    align-items: start;
+}}
+.ui-field-groups {{ display: flex; flex-direction: column; gap: 1.25rem; padding-bottom: 1rem; }}
+.ui-field-group + .ui-field-group {{ border-top: 1px solid rgba(127, 127, 127, 0.16); padding-top: 1.25rem; }}
+.ui-field-group-title {{
+    font-size: 0.72rem; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase;
+    opacity: 0.55; margin-bottom: 0.65rem;
+}}
+.ui-field-group .ui-fields {{ padding-bottom: 0; }}
+.ui-field {{ min-width: 0; }}
+.ui-field-wide {{ grid-column: 1 / -1; }}
+.ui-field-label {{ font-size: 0.82rem; opacity: 0.65; margin-bottom: 0.15rem; }}
+.ui-field-value {{ font-size: 1rem; line-height: 1.45; overflow-wrap: anywhere; }}
+.ui-field-quiet .ui-field-value {{ font-size: 0.92rem; opacity: 0.85; }}
+/* Streamlit styles EVERY markdown <table> with an outer border, a 1px
+   border-top on every <tr>, 1px borders on th/td, and a 1rem bottom margin
+   (confirmed in the 1.37 bundle). Those are what drew a line ABOVE the
+   header of this table; all are reset here (with !important, since the
+   emotion rules have equal specificity) and only the header underline and
+   the light row separators are drawn, so the table reads as light, not
+   boxed in twice inside its card. */
+.ui-table-wrap {{ overflow-x: auto; padding-bottom: 1rem; }}
+.ui-table {{ width: 100%; border-collapse: collapse; border: none !important; margin: 0 !important; }}
+.ui-table tr {{ border: none !important; }}
+.ui-table th {{
+    text-align: left; font-size: 0.82rem; font-weight: 500; opacity: 0.65;
+    padding: 0.3rem 1rem 0.5rem 0 !important; border: none !important;
+    border-bottom: 1px solid rgba(127, 127, 127, 0.25) !important; white-space: nowrap;
+}}
+.ui-table td {{
+    padding: 0.75rem 1rem 0.75rem 0 !important; vertical-align: top; border: none !important;
+    border-bottom: 1px solid rgba(127, 127, 127, 0.14) !important;
+}}
+.ui-table tr:last-child td {{ border-bottom: none !important; }}
+.ui-table td.ui-num {{ white-space: nowrap; font-variant-numeric: tabular-nums; }}
+.ui-table td.ui-table-main {{ min-width: 220px; overflow-wrap: anywhere; }}
+
+/* --- Vertical rhythm (opt-in via ui.card(rhythm=True)) ----------------------
+   ROOT CAUSE of uneven card spacing, confirmed in the 1.37 bundle: Streamlit
+   gives every markdown container margin-bottom:-1rem, to cancel the 1rem
+   bottom margin it assumes on the <p> inside. Raw-HTML blocks (muted lines,
+   badges, grids) have no <p>, so they lose 1rem after them: the last line
+   in a card hugged the bottom border and two adjacent HTML lines had zero
+   gap. Inside a rhythm card that -1rem and the <p> margin are both zeroed
+   and ONE gap (0.75rem, the vertical block's own flex gap) separates
+   elements; padding is equal on all sides. Headings lose their built-in
+   padding for the same reason. */
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.ui-rhythm-marker) div[data-testid="stVerticalBlock"] {{
+    gap: 0.75rem;
+}}
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.ui-rhythm-marker) [data-testid="stMarkdownContainer"],
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.ui-rhythm-marker) [data-testid="stCaptionContainer"] {{
+    margin-bottom: 0 !important;
+}}
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.ui-rhythm-marker) [data-testid="stMarkdownContainer"] p,
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.ui-rhythm-marker) [data-testid="stCaptionContainer"] p {{
+    margin: 0 !important;
+}}
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.ui-rhythm-marker) [data-testid="stHeading"] :is(h1, h2, h3, h4) {{
+    padding: 0 !important;
+    margin: 0 !important;
+}}
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.ui-rhythm-marker) :is(.ui-fields, .ui-table-wrap, .ui-field-groups, .ui-callout-wrap) {{
+    padding-bottom: 0;
+}}
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.ui-rhythm-pad) {{
+    padding: 1.15rem 1.25rem !important;
+}}
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.ui-rhythm-accent) {{
+    border-top: 3px solid {ACCENT_COLOR} !important;
+}}
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.ui-rhythm-soft) {{
+    background: rgba(127, 127, 127, 0.045);
+}}
+div[data-testid="element-container"]:has(.ui-rhythm-marker) {{ display: none; }}
+
+/* Page-level text blocks. Because of the -1rem above, each carries its own
+   compensating padding-bottom so the visible spacing after it is the
+   normal 1rem (note) or a deliberate larger section gap (supporting). */
+.ui-note {{ font-size: 0.85rem; line-height: 1.5; opacity: 0.65; padding-bottom: 1rem; }}
+.ui-supporting {{ font-size: 1rem; line-height: 1.55; opacity: 0.75; padding-bottom: 1.5rem; }}
+/* A primary line with an optional quieter line directly under it. */
+.ui-stack-primary {{ line-height: 1.55; }}
+.ui-stack-bold {{ font-weight: 600; }}
+.ui-stack-secondary {{ margin-top: 0.5rem; font-size: 0.875rem; line-height: 1.5; opacity: 0.7; }}
+
+
+.ui-ad-field {{ padding-bottom: 1rem; }}
+.ui-ad-field-value {{ font-size: 0.95rem; line-height: 1.45; overflow-wrap: anywhere; }}
+/* Milestone 26: a lightweight callout (label + text, left accent rule, no
+   box) and an expanded "titled summary" block for finding-style content. */
+.ui-callout-wrap {{ padding-bottom: 1rem; }}
+.ui-callout {{ border-left: 3px solid {ACCENT_COLOR}; padding: 0.1rem 0 0.1rem 0.9rem; }}
+.ui-callout-label {{
+    font-size: 0.72rem; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase;
+    opacity: 0.6; margin-bottom: 0.25rem;
+}}
+.ui-callout-text {{ font-size: 1rem; line-height: 1.5; }}
+.ui-callout-strong .ui-callout-text {{ font-size: 1.15rem; font-weight: 600; line-height: 1.45; }}
+.ui-titled-title {{ font-size: 1.25rem; font-weight: 700; line-height: 1.35; }}
+.ui-titled-summary {{ font-size: 1rem; line-height: 1.55; margin-top: 0.6rem; }}
+.ui-titled-note-label {{
+    font-size: 0.72rem; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase;
+    opacity: 0.55; margin-top: 1rem; margin-bottom: 0.2rem;
+}}
+.ui-titled-note {{ font-size: 0.95rem; line-height: 1.5; opacity: 0.8; }}
+.ui-numbered-badge .ui-finding-number {{ display: inline-block; vertical-align: middle; margin-right: 0.6rem; }}
+
+/* The one-time scroll-to-top helper's iframe is invisible plumbing. */
+div[data-testid="element-container"]:has(iframe[height="0"]) {{
+    position: absolute; height: 0; margin: 0; overflow: hidden;
+}}
 </style>
 """
 
@@ -304,7 +436,7 @@ def muted(text: str) -> None:
 
 
 @contextmanager
-def card(level: str = "standard", height: int | None = None):
+def card(level: str = "standard", height: int | None = None, rhythm: bool = False, soft: bool = False):
     """One of 3 card levels (Part 5), replacing bare `st.container(border=
     True)` used identically everywhere regardless of importance:
 
@@ -320,16 +452,35 @@ def card(level: str = "standard", height: int | None = None):
     should align, e.g. findings of uneven length); the base stylesheet
     then pins the card's last element to the bottom rather than leaving a
     gap. Usage: `with ui.card("primary"): ...` exactly like `st.container`.
+
+    `rhythm=True` (opt-in, so cards on pages that already look right are
+    untouched) applies the shared vertical-rhythm rules in _BASE_CSS: equal
+    top/bottom/side padding, one uniform gap between the card's elements,
+    Streamlit's own markdown/heading margins neutralized, and, for
+    "primary", the accent as a top border instead of a separate strip
+    element (whose negative-margin math assumed Streamlit's default padding
+    and a 1rem gap). Implemented with a zero-size marker element that the
+    CSS keys on via :has() and hides (display:none, so it takes no gap).
+    `soft=True` (bordered rhythm cards only) adds a very quiet background
+    tint, for compact summary cards stacked on a page.
     """
     if level == "quiet":
         with st.container(border=False, height=height):
+            if rhythm:
+                st.markdown('<div class="ui-rhythm-marker"></div>', unsafe_allow_html=True)
             yield
     elif level == "primary":
         with st.container(border=True, height=height):
-            st.markdown('<div class="ui-card-accent"></div>', unsafe_allow_html=True)
+            if rhythm:
+                st.markdown('<div class="ui-rhythm-marker ui-rhythm-pad ui-rhythm-accent"></div>', unsafe_allow_html=True)
+            else:
+                st.markdown('<div class="ui-card-accent"></div>', unsafe_allow_html=True)
             yield
     else:
         with st.container(border=True, height=height):
+            if rhythm:
+                soft_cls = " ui-rhythm-soft" if soft else ""
+                st.markdown(f'<div class="ui-rhythm-marker ui-rhythm-pad{soft_cls}"></div>', unsafe_allow_html=True)
             yield
 
 
@@ -452,40 +603,40 @@ def render_ad_preview(
 def render_creative_placeholder(
     *,
     angle_label: str,
-    headline: str,
+    headline: str = "",
     primary_text: str = "",
     cta: str = "",
     why_this_exists: str = "",
     reason_to_believe: str = "",
     footer: Callable[[], None] | None = None,
+    box_title: str = "CREATIVE PREVIEW",
+    box_subtitle: str = "Image generation added next",
+    note: str = "",
 ) -> None:
-    """A polished stand-in for a not-yet-generated creative concept
-    (Creative Lab V2): a dashed "image generation added next" box where a
-    real creative preview will eventually render, plus the concept's own
-    copy (headline, primary text, CTA) so the concept reads as a real,
-    considered idea even before an image exists. Never calls an image
-    provider and never substitutes a real (existing or generated) asset;
-    this is the ONLY visual for a concept until a later milestone
-    reconnects live generation.
+    """A card for a concept whose finished ad does NOT exist (yet): a dashed
+    box where the ad will appear, with a state title/subtitle (default
+    "CREATIVE PREVIEW / Image generation added next"; Creative Lab V3 passes
+    "AD NOT GENERATED YET", "GENERATING", or "GENERATION FAILED"), the
+    concept's own strategic text, and an optional footer. Never calls an
+    image provider and never substitutes a real asset.
 
     Reuses the same card/badge/CTA-pill/muted primitives as render_ad_preview
-    rather than inventing a second visual language for "a proposed ad
-    without an image yet."
+    rather than inventing a second visual language.
 
     `footer`, if given, is called last, still INSIDE this card's own
-    bordered container (e.g. an "Include in experiment" checkbox): the
-    base stylesheet's equal-height-row CSS pins a card's own last child to
-    the bottom, so a control rendered here, inside the card, lines up
-    across a row of unequal-length concepts; the same control rendered
-    AFTER this function returns (outside the card) would not.
+    bordered container (e.g. a checkbox or retry button): the base
+    stylesheet's equal-height-row CSS pins a card's own last child to the
+    bottom, so a control rendered here lines up across a row of unequal
+    cards; the same control rendered AFTER this function returns (outside
+    the card) would not.
     """
     with card("standard"):
         badge_row([angle_label.upper()])
         st.markdown(
             '<div style="border: 1px dashed rgba(127, 127, 127, 0.35); border-radius: 8px; '
             'padding: 1.4rem 1rem; text-align: center; margin-bottom: 0.6rem; opacity: 0.8;">'
-            '<div style="font-weight: 600; letter-spacing: 0.04em; font-size: 0.85rem;">CREATIVE PREVIEW</div>'
-            '<div class="ui-quiet" style="margin-top: 0.2rem;">Image generation added next</div>'
+            f'<div style="font-weight: 600; letter-spacing: 0.04em; font-size: 0.85rem;">{html.escape(box_title)}</div>'
+            f'<div class="ui-quiet" style="margin-top: 0.2rem;">{html.escape(box_subtitle)}</div>'
             "</div>",
             unsafe_allow_html=True,
         )
@@ -497,7 +648,267 @@ def render_creative_placeholder(
             muted(reason_to_believe)
         if cta:
             st.markdown(f'<span class="ui-ad-cta">{cta}</span>', unsafe_allow_html=True)
+        if note:
+            muted(note)
         if why_this_exists:
             muted(why_this_exists)
         if footer:
             footer()
+
+
+def render_generated_ad(
+    *,
+    angle_label: str,
+    image_path: str | None,
+    primary_text: str,
+    headline: str,
+    description: str = "",
+    cta: str = "",
+    why_this_exists: str = "",
+    footer: Callable[[], None] | None = None,
+) -> None:
+    """A FINISHED ad as one card: the generated image, then the structured
+    Meta fields that live outside it (Primary text, Headline, Description,
+    CTA), then the concept's quiet strategic rationale, then an optional
+    footer (selection / regenerate controls). Used by BOTH Creative Lab and
+    Experiments so the exact same ad reads identically in both places.
+
+    Pure presentation of data the caller already has: never generates,
+    rewrites or trims copy. A missing image file shows a plain "Creative
+    unavailable" box, never a crash (core.assets.generated_asset_exists is
+    checked at render time by callers, since a stored path is a snapshot).
+    """
+    from pathlib import Path
+
+    with card("standard"):
+        badge_row([angle_label.upper()])
+        if image_path and Path(image_path).is_file():
+            st.image(str(image_path), use_column_width=True)
+        else:
+            st.markdown(
+                '<div style="border: 1px dashed rgba(127, 127, 127, 0.35); border-radius: 8px; padding: 1.4rem 1rem; '
+                'text-align: center; margin-bottom: 0.6rem; opacity: 0.8;"><div style="font-weight: 600; '
+                'letter-spacing: 0.04em; font-size: 0.85rem;">CREATIVE UNAVAILABLE</div></div>',
+                unsafe_allow_html=True,
+            )
+        field_grid_items = [("Primary text", primary_text), ("Headline", headline)]
+        if description:
+            field_grid_items.append(("Description", description))
+        for label, value in field_grid_items:
+            st.markdown(
+                f'<div class="ui-ad-field"><div class="ui-field-label">{html.escape(label)}</div>'
+                f'<div class="ui-ad-field-value">{html.escape(value).replace("$", "&#36;")}</div></div>',
+                unsafe_allow_html=True,
+            )
+        if cta:
+            st.markdown(
+                f'<div class="ui-ad-field"><div class="ui-field-label">CTA</div>'
+                f'<span class="ui-ad-cta">{html.escape(cta)}</span></div>',
+                unsafe_allow_html=True,
+            )
+        if why_this_exists:
+            muted(why_this_exists)
+        if footer:
+            footer()
+
+
+def _field_cells(items: list[tuple[str, str]], wide_labels: tuple[str, ...] = ()) -> str:
+    cells = []
+    for label, value in items:
+        wide = " ui-field-wide" if label and label in wide_labels else ""
+        label_html = f'<div class="ui-field-label">{html.escape(label)}</div>' if label else ""
+        cells.append(f'<div class="ui-field{wide}">{label_html}<div class="ui-field-value">{html.escape(value)}</div></div>')
+    return "".join(cells)
+
+
+def field_grid(items: list[tuple[str, str]], wide_labels: tuple[str, ...] = (), quiet: bool = False) -> None:
+    """A compact grid of (label, value) fields as ONE element: values wrap
+    naturally, every value starts at the same top position directly under
+    its own label (grid align-items:start, so a value that takes several
+    lines never pushes a shorter neighbour down), and the grid reflows to
+    fewer columns at narrow widths. Values are plain text (HTML-escaped),
+    never markdown. A label in `wide_labels` spans the whole row. Replaces
+    per-value st.columns + ui.muted + st.write, whose separate elements
+    were spaced by Streamlit's own gap and bottom-aligned by the card CSS.
+    """
+    quiet_cls = " ui-field-quiet" if quiet else ""
+    st.markdown(f'<div class="ui-fields{quiet_cls}">{_field_cells(items, wide_labels)}</div>', unsafe_allow_html=True)
+
+
+def grouped_field_grid(groups: list[tuple[str, list[tuple[str, str]]]]) -> None:
+    """field_grid with named groups: [(group title, [(label, value), ...])].
+    Each group is a small uppercase title over its own top-aligned grid; a
+    light rule separates consecutive groups, so related fields read as one
+    unit and the groups read as distinct steps. A field with an empty label
+    renders just its value (e.g. a one-line summary under its group title).
+    One element, HTML-escaped plain text, same alignment guarantees as
+    field_grid.
+    """
+    parts = []
+    for title, items in groups:
+        parts.append(
+            f'<div class="ui-field-group"><div class="ui-field-group-title">{html.escape(title)}</div>'
+            f'<div class="ui-fields">{_field_cells(items)}</div></div>'
+        )
+    st.markdown(f'<div class="ui-field-groups">{"".join(parts)}</div>', unsafe_allow_html=True)
+
+
+def comparison_table(first_header: str, metric_headers: list[str], rows: list[dict]) -> None:
+    """A responsive comparison table: each row is {"name", "note" (optional),
+    "cells": [one string per metric header]}. The name column wraps; metric
+    cells never break mid-value; at narrow widths the table scrolls
+    horizontally inside its own container instead of overflowing the page
+    or stacking into an unreadable column layout. All text is HTML-escaped.
+    """
+    head = "".join(f"<th>{html.escape(h)}</th>" for h in [first_header, *metric_headers])
+    body = ""
+    for row in rows:
+        note = f'<div class="ui-quiet">{html.escape(row["note"])}</div>' if row.get("note") else ""
+        cells = "".join(f'<td class="ui-num">{html.escape(c)}</td>' for c in row["cells"])
+        body += f'<tr><td class="ui-table-main"><strong>{html.escape(row["name"])}</strong>{note}</td>{cells}</tr>'
+    st.markdown(
+        f'<div class="ui-table-wrap"><table class="ui-table"><thead><tr>{head}</tr></thead>'
+        f"<tbody>{body}</tbody></table></div>",
+        unsafe_allow_html=True,
+    )
+
+
+_SCROLL_REQUEST_KEY = "_ui_scroll_to_top_request"
+_SCROLL_COUNTER_KEY = "_ui_scroll_to_top_counter"
+
+# Streamlit's scrollable page container is <section class="main"> (confirmed
+# against the installed 1.37 frontend bundle); components.html iframes are
+# sandboxed with allow-same-origin, so window.parent.document is reachable.
+# Three bounded attempts (now, next frame, shortly after), never a loop, to
+# outlast Streamlit swapping stale elements for the new render.
+_SCROLL_JS = """<script>/* scroll request __NONCE__ */
+(function () {
+  var doc;
+  try { doc = window.parent.document; } catch (e) { return; }
+  function go() {
+    var el = doc.querySelector('section.main');
+    if (el) { el.scrollTo(0, 0); }
+    try { window.parent.scrollTo(0, 0); } catch (e) {}
+  }
+  go();
+  window.requestAnimationFrame(go);
+  window.setTimeout(go, 120);
+})();
+</script>"""
+
+
+def request_scroll_to_top() -> None:
+    """Ask for ONE scroll-to-top on the next render. Call from an on_click
+    callback that moves the page to a different view (it runs before the
+    rerender). Only sets a flag; nothing scrolls until the page calls
+    apply_pending_scroll_to_top(), which consumes the flag, so an
+    unrelated rerun (a checkbox, a tab, an expander) never scrolls.
+    """
+    counter = st.session_state.get(_SCROLL_COUNTER_KEY, 0) + 1
+    st.session_state[_SCROLL_COUNTER_KEY] = counter
+    st.session_state[_SCROLL_REQUEST_KEY] = counter
+
+
+def apply_pending_scroll_to_top() -> None:
+    """Call once, at the same fixed spot near the top of a page, on every
+    run. Always reserves an st.empty() slot (display:none in Streamlit, so
+    no visible gap) so the element positions after it, notably an st.tabs
+    whose active tab Streamlit tracks by position, are identical whether or
+    not a scroll is pending. When a request is pending it is popped (so it
+    fires once) and a zero-height iframe is rendered into the slot. The
+    request counter is embedded in the iframe's HTML so two consecutive
+    requests never render byte-identical content, which Streamlit would
+    otherwise treat as unchanged and not re-run.
+    """
+    slot = st.empty()
+    request = st.session_state.pop(_SCROLL_REQUEST_KEY, None)
+    if request is None:
+        return
+    with slot:
+        components.html(_SCROLL_JS.replace("__NONCE__", str(request)), height=0)
+
+
+def text_stack(primary: str, secondary: str | None = None, bold_primary: bool = False) -> None:
+    """A primary line with an optional quieter supporting line directly
+    beneath it, as ONE element, so the pair always keeps the same relative
+    spacing however Streamlit spaces neighbouring elements (a st.write
+    followed by a ui.muted was two elements with an uncontrolled gap).
+    Plain text, HTML-escaped. Meant for use inside ui.card(rhythm=True).
+    """
+    def safe(text: str) -> str:
+        # "$" as an entity so Streamlit's markdown never pairs two currency
+        # values into a LaTeX span.
+        return html.escape(text).replace("$", "&#36;")
+
+    bold = " ui-stack-bold" if bold_primary else ""
+    second = f'<div class="ui-stack-secondary">{safe(secondary)}</div>' if secondary else ""
+    st.markdown(f'<div class="ui-stack-primary{bold}">{safe(primary)}</div>{second}', unsafe_allow_html=True)
+
+
+def supporting_text(text: str) -> None:
+    """A page-level supporting line under a title: readable (1rem, not a
+    tiny caption), secondary (reduced opacity), with a deliberate section
+    gap after it. Plain text, HTML-escaped.
+    """
+    st.markdown(f'<div class="ui-supporting">{html.escape(text)}</div>', unsafe_allow_html=True)
+
+
+def note(text: str) -> None:
+    """A small page-level or expander-level note that keeps normal spacing
+    after it (unlike muted(), whose HTML block loses 1rem to Streamlit's
+    markdown margin, leaving the next element flush against it). Plain
+    text, HTML-escaped.
+    """
+    st.markdown(f'<div class="ui-note">{html.escape(text)}</div>', unsafe_allow_html=True)
+
+
+def theme_label(theme: str) -> str:
+    """The ONE display form of a customer theme name: sentence case ("Taste &
+    odor", "Bottled water frustration"), matching how the theme is stored in
+    customer_signals.csv. Display only: never used for matching, joins or
+    ids. Exists because some pages previously title-cased the same theme
+    ("Taste & Odor") while others showed it as stored.
+    """
+    text = theme.strip()
+    return text[:1].upper() + text[1:].lower()
+
+
+def callout(label: str, text: str, emphasis: bool = False) -> None:
+    """A lightweight labeled callout: small uppercase label over one line or
+    two of text, marked by a left accent rule instead of a box. `emphasis`
+    enlarges and weights the text for the single most important sentence in
+    a section. Plain text, HTML-escaped ($ as an entity).
+    """
+    strong = " ui-callout-strong" if emphasis else ""
+    safe_label = html.escape(label).replace("$", "&#36;")
+    safe_text = html.escape(text).replace("$", "&#36;")
+    st.markdown(
+        f'<div class="ui-callout-wrap"><div class="ui-callout{strong}"><div class="ui-callout-label">{safe_label}</div>'
+        f'<div class="ui-callout-text">{safe_text}</div></div></div>',
+        unsafe_allow_html=True,
+    )
+
+
+def numbered_badge(number: int, label: str) -> None:
+    """An eyebrow line: a quiet ordinal (01) followed by a category badge,
+    as one element. Plain text, HTML-escaped."""
+    st.markdown(
+        f'<div class="ui-badge-row ui-numbered-badge"><span class="ui-finding-number">{number:02d}</span>'
+        f'<span class="ui-badge">{html.escape(label)}</span></div>',
+        unsafe_allow_html=True,
+    )
+
+
+def titled_summary(title: str, summary: str, note_label: str | None = None, note: str | None = None) -> None:
+    """An expanded intelligence-object body as ONE element: a strong title,
+    a normal-weight summary, and an optional small-labeled secondary note
+    (e.g. WHY IT MATTERS). Plain text, HTML-escaped ($ as an entity)."""
+    def safe(t: str) -> str:
+        return html.escape(t).replace("$", "&#36;")
+
+    parts = [f'<div class="ui-titled-title">{safe(title)}</div>', f'<div class="ui-titled-summary">{safe(summary)}</div>']
+    if note:
+        if note_label:
+            parts.append(f'<div class="ui-titled-note-label">{safe(note_label)}</div>')
+        parts.append(f'<div class="ui-titled-note">{safe(note)}</div>')
+    st.markdown("".join(parts), unsafe_allow_html=True)
