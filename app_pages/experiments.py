@@ -75,7 +75,7 @@ from agents.performance.engine import (
     analyze_concept_experiment,
 )
 from core import ui
-from core.experiment_simulation import ExperimentResult, build_concept_arms_result
+from core.experiment_simulation import DEMO_TEST_DAYS, ExperimentResult, build_concept_arms_result
 from core.shell import current_client
 
 _ARM_LETTERS = "ABCDEFGH"
@@ -96,7 +96,7 @@ def _prepared_description(handoff: dict) -> str:
 
 def _render_learning_question(handoff: dict) -> None:
     ui.section_header("What we're trying to learn")
-    st.write(handoff.get("learning_question") or handoff["hypothesis"])
+    ui.safe_paragraph(handoff.get("learning_question") or handoff["hypothesis"])
     ui.field_grid([("Hypothesis", handoff["hypothesis"])], wide_labels=("Hypothesis",), quiet=True)
 
 
@@ -247,8 +247,8 @@ def _reset_demo_test(handoff: dict) -> None:
 def _render_prepared_view(client_id: str, handoff: dict) -> None:
     ui.muted(ui.theme_label(handoff["customer_theme"]).upper())
     st.title(f"{ui.theme_label(handoff['customer_theme'])} messaging test")
-    ui.badge_row(["Ready to test"])
-    st.write(_prepared_description(handoff))
+    ui.badge_row(["Ready to test", f"Simulated test · {DEMO_TEST_DAYS} days"])
+    ui.safe_paragraph(_prepared_description(handoff))
 
     st.divider()
 
@@ -285,7 +285,7 @@ def _render_results_hero(handoff: dict, analysis: ConceptExperimentAnalysis) -> 
     the full Test Setup panel) and "what happened?" (the Performance
     Agent's own headline, evidence-tied, never "proven"/"winner").
     """
-    ui.badge_row(["Results", "Demo synthetic results"])
+    ui.badge_row(["Results", "Demo synthetic results", f"Simulated test · {DEMO_TEST_DAYS} days"])
     st.title(f"{ui.theme_label(handoff['customer_theme'])} messaging test")
     ui.supporting_text(f"What we tested: {analysis.learning_question}")
 
@@ -329,11 +329,17 @@ def _render_arms_comparison(result: ExperimentResult, analysis: ConceptExperimen
 def _render_learning(analysis: ConceptExperimentAnalysis) -> None:
     """"What did we learn," part 2: the Performance Agent's interpretation
     tied explicitly back to the original learning question, plus its
-    limitations, stated once, plainly.
+    limitations, stated once, plainly. Milestone 29: shown as two labeled
+    blocks (ui.insight_blocks) instead of an unlabeled text_stack - the
+    same two existing fields, verbatim, just with the distinction between
+    "the finding" and "the caveat" made explicit at a glance.
     """
     ui.section_header("What we learned")
     with ui.card("standard", rhythm=True):
-        ui.text_stack(analysis.learning_statement, analysis.limitations)
+        ui.insight_blocks([
+            ("What we're seeing", analysis.learning_statement),
+            ("Keep in mind", analysis.limitations),
+        ])
 
 
 def _render_next_test(analysis: ConceptExperimentAnalysis) -> None:
@@ -347,7 +353,7 @@ def _render_next_test(analysis: ConceptExperimentAnalysis) -> None:
     next_test = analysis.recommended_next_test
     with ui.card("primary", rhythm=True):
         ui.text_stack(next_test.label, bold_primary=True)
-        st.write(next_test.rationale)
+        ui.safe_paragraph(next_test.rationale)
 
     with ui.card("quiet", rhythm=True):
         ui.badge_row(["Proposed learning", "Pending review"])

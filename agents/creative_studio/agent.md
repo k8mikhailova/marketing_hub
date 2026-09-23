@@ -128,6 +128,14 @@ Creative Studio now produces the FINISHED ad for each Creative Concept, and
 Creative Lab is where that happens; Experiments tests the exact ads created
 and approved there and never regenerates or reinterprets one.
 
+**Milestone 28.4:** before generation, a concept renders as a creative-
+direction BRIEF (core/ui.py::render_creative_brief - angle name, the
+concept's own `angle` as "Strategic idea," `why_this_concept_exists` as "Why
+we're exploring this"), sharing no visual language with a finished ad (no
+image slot, no CTA, no Include control); only a generated concept renders as
+an ad (render_generated_ad). The two states are meant to look unmistakably
+different, not just differently labeled.
+
 Pipeline (agents/creative_studio/pipeline.py):
 `CreativeConcept -> AdExecutionSpec (text step, execution.py) -> image
 request (generation.py::build_ad_prompt) -> GeneratedCreative (persisted by

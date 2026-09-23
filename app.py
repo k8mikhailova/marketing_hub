@@ -13,6 +13,31 @@ st.navigation's own nav widget is rendered with position="hidden": the
 sidebar's page links are instead drawn manually in core/shell.py, after the
 client selector, so the client/workspace context always appears before
 navigation. Routing is unaffected by this; only the widget's placement is.
+st.navigation(...) is called before render_sidebar (Milestone 29) purely to
+read pg.title, the current page's own name, so render_sidebar can render
+that ONE entry with an explicit "you are here" treatment instead of relying
+on Streamlit's own active-link styling; pg.run() (the part that actually
+executes the current page's script) still happens last, so routing itself
+is unaffected by the reorder.
+
+Milestone 29.2: ui.inject_base_styles() is called here too, before
+render_sidebar, in addition to each page's own call (kept for now; the CSS
+is idempotent, so the duplicate is harmless - see core/ui.py's own
+docstring). Streamlit tags every element with the identity of whichever
+script was actually running when it was created; elements created here, in
+app.py itself (the app's single "main script"), keep that identity across
+every page navigation, while elements created inside a page module (each
+call to inject_base_styles() living at the top of app_pages/*.py) are
+tagged with THAT page's own identity and are dropped the moment a different
+page becomes current. Since the shared stylesheet also carries the sidebar
+nav-link and active-marker CSS, having it live ONLY inside each page meant
+the sidebar's own elements - which, being created here in app.py, DO
+persist across a page change - would briefly render unstyled (and the main
+content area would briefly snap to Streamlit's own default width/padding)
+in the gap between the old page's stylesheet disappearing and the new
+page's own call re-adding it. Injecting it here first closes that gap: the
+stylesheet now belongs to app.py itself, so it never leaves the tree at
+all, precisely like the sidebar elements it styles.
 
 load_dotenv() runs once here, before any page: it reads .env (gitignored,
 never committed; see .env.example) into the process environment if present,
@@ -24,6 +49,7 @@ os.environ.get("OPENAI_API_KEY") check handles an unset key gracefully.
 import streamlit as st
 from dotenv import load_dotenv
 
+from core import ui
 from core.shell import render_sidebar
 
 load_dotenv()
@@ -42,7 +68,7 @@ pages = [
     st.Page("app_pages/experiments.py", title="Experiments"),
 ]
 
-render_sidebar(pages)
-
 pg = st.navigation(pages, position="hidden")
+ui.inject_base_styles()
+render_sidebar(pages, current_title=pg.title)
 pg.run()

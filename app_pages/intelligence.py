@@ -55,11 +55,7 @@ def _render_brief_item(number: int, finding) -> None:
         with st.expander("View evidence"):
             st.caption(f"{finding.confidence.capitalize()} confidence")
             for e in finding.evidence:
-                st.markdown(f"**{e.label}**")
-                st.write(e.detail)
-                st.caption(f"Source: {e.source}")
-                if e.table is not None:
-                    st.dataframe(e.table, hide_index=True, use_container_width=True)
+                ui.render_evidence_item(e.label, e.detail, e.source, e.table)
 
 
 def _render_from_insight_to_creative() -> None:

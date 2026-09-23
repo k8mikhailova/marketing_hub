@@ -10,6 +10,8 @@ averaged: averaging per-row CTR/CPA/ROAS values would overweight
 low-volume days. Dividing by a zero denominator returns NaN, not 0 or an
 error, so "no data" is never confused with "zero performance."
 """
+from datetime import timedelta
+
 import numpy as np
 import pandas as pd
 
@@ -377,6 +379,29 @@ def has_full_period(df: pd.DataFrame, start, end, date_col: str = "date") -> boo
         df = df.copy()
         df[date_col] = pd.to_datetime(df[date_col])
     return pd.to_datetime(start) >= df[date_col].min() and pd.to_datetime(end) <= df[date_col].max()
+
+
+# Shared relative-period options (Milestone 19, Part 2A, introduced for
+# Customer Signals; Milestone 28.8 promotes them here so Overview reuses the
+# exact same options/default/resolution instead of a second, independently
+# maintained implementation). Each label maps to a fixed lookback window
+# ending at the dataset's own most recent date, never a raw custom
+# date-range picker, so "Last 30 days" always means the same thing
+# regardless of when the demo happens to run. previous_period/
+# has_full_period above still decide whether a full preceding window of the
+# same length actually exists before any page claims a comparison.
+PERIOD_OPTIONS = {"Last 7 days": 7, "Last 30 days": 30, "Last 60 days": 60}
+DEFAULT_PERIOD_LABEL = "Last 30 days"
+
+
+def resolve_period(data_min, data_max, period_days: int) -> tuple:
+    """The [start, end] window for a PERIOD_OPTIONS selection: always ends
+    at data_max, and starts period_days earlier, clamped so it never
+    precedes data_min. A "Last 60 days" selection against a dataset with
+    less than 60 days of history simply starts at data_min; it never
+    fabricates dates outside the actual dataset.
+    """
+    return max(data_min, data_max - timedelta(days=period_days - 1)), data_max
 
 
 def _summed(df: pd.DataFrame, by: list[str] | None) -> pd.DataFrame:

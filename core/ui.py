@@ -188,10 +188,8 @@ details[data-testid="stExpander"] summary {{
    as a near-bare text link by default, easy to miss as a control at all;
    this gives it a visible shape and border at rest (never only on hover),
    a subtle accent background on hover, and forces a fixed, uniform
-   margin on every instance so a row of sidebar links reads as one evenly
-   spaced group regardless of which one happens to be the active page
-   (Streamlit's own active-link styling differs from an inactive one, but
-   this margin rule is unconditional, so spacing itself never varies). */
+   padding/margin on every instance so a row of sidebar links reads as one
+   evenly spaced group. */
 [data-testid="stPageLink-NavLink"] {{
     display: flex !important;
     align-items: center;
@@ -206,6 +204,54 @@ details[data-testid="stExpander"] summary {{
 [data-testid="stPageLink-NavLink"]:hover {{
     background: color-mix(in srgb, {ACCENT_COLOR} 14%, transparent);
     border-color: color-mix(in srgb, {ACCENT_COLOR} 45%, transparent);
+}}
+/* Milestone 29.1: every sidebar nav item, including the current page, is a
+   real st.page_link - confirmed against Streamlit 1.37.1's own source
+   (PageLink.tsx / styled-components.ts) that "is this the current page"
+   (isCurrentPage) never reaches the DOM as an attribute/class/aria-marker;
+   it's consumed only inside React (an inline background-color computation
+   and a boldLabel flag passed to the label's own markdown renderer), so no
+   selector here could ever target it directly. core/shell.py instead
+   renders an invisible marker element immediately before each page's own
+   page_link; :has() (already used the same way for the rhythm marker
+   below) lets this stylesheet select the very next nav item from that
+   marker's presence, entirely in CSS, with the marker itself taking no
+   space. This keys off the SAME component and DOM wrapper as the other
+   four items - color/background/font-weight are the only things that
+   differ, nothing that affects box size, so no item can ever end up a
+   different height or shift its neighbors depending on which page is
+   current. (An earlier pass rendered the current page as a hand-styled,
+   non-link <div> instead: that div sits in a stMarkdownContainer, which
+   carries Streamlit's own -1rem bottom-margin compensation - see the
+   rhythm-CSS comment below - that a stPageLink container never gets,
+   producing exactly the inconsistent spacing this replaces.)
+
+   Milestone 29.2: a marker precedes EVERY link now, not only the current
+   one (core/shell.py), so the sidebar's own element sequence - count,
+   type, order - is identical on every page; only which single marker
+   carries the "-current-" class changes. `.ui-sidebar-marker` (inactive)
+   and `.ui-sidebar-current-marker` (active) are equally invisible; only
+   the active one's :has() rule below actually styles anything. Streamlit
+   preserves elements created here in app.py (this module's own caller)
+   across a page change - traced through Streamlit 1.37.1's own source,
+   AppNode.ts's filterMainScriptElements keeps anything tagged with the
+   app's constant main-script identity - but a shifting marker position
+   still gave the preserved sidebar subtree a different shape run to run,
+   which is exactly what forces a positional re-render instead of an
+   in-place patch; a fixed slot per link removes that variable. */
+.ui-sidebar-marker, .ui-sidebar-current-marker {{
+    display: none;
+}}
+div[data-testid="element-container"]:has(.ui-sidebar-marker),
+div[data-testid="element-container"]:has(.ui-sidebar-current-marker) {{
+    display: none;
+}}
+div[data-testid="element-container"]:has(.ui-sidebar-current-marker) + div[data-testid="element-container"] [data-testid="stPageLink-NavLink"] {{
+    background: color-mix(in srgb, {ACCENT_COLOR} 16%, transparent) !important;
+    border-color: color-mix(in srgb, {ACCENT_COLOR} 40%, transparent) !important;
+    border-left: 3px solid {ACCENT_COLOR} !important;
+    padding-left: calc(0.7rem - 2px) !important;
+    font-weight: 700 !important;
 }}
 
 /* Same non-negotiable "looks clickable at rest" rule for every native
@@ -359,6 +405,22 @@ div[data-testid="element-container"]:has(.ui-rhythm-marker) {{ display: none; }}
 .ui-titled-note {{ font-size: 0.95rem; line-height: 1.5; opacity: 0.8; }}
 .ui-numbered-badge .ui-finding-number {{ display: inline-block; vertical-align: middle; margin-right: 0.6rem; }}
 
+/* Milestone 29: a plain safely-escaped paragraph (see ui.safe_paragraph),
+   one piece of Evidence (ui.render_evidence_item), and a compact labeled
+   multi-part explanation (ui.insight_blocks). */
+.ui-paragraph {{ font-size: 1rem; line-height: 1.55; padding-bottom: 1rem; }}
+.ui-evidence-label {{ font-weight: 600; margin-bottom: 0.2rem; }}
+.ui-evidence-detail {{ font-size: 1rem; line-height: 1.5; margin-bottom: 0.4rem; }}
+.ui-evidence-list {{ margin: 0 0 0.4rem 1.15rem; padding: 0; font-size: 1rem; line-height: 1.5; }}
+.ui-evidence-list li {{ margin-bottom: 0.2rem; }}
+.ui-insight-blocks {{ padding-bottom: 1rem; }}
+.ui-insight-block + .ui-insight-block {{ margin-top: 0.85rem; }}
+.ui-insight-label {{
+    font-size: 0.72rem; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase;
+    opacity: 0.6; margin-bottom: 0.2rem;
+}}
+.ui-insight-text {{ font-size: 0.95rem; line-height: 1.5; }}
+
 /* The one-time scroll-to-top helper's iframe is invisible plumbing. */
 div[data-testid="element-container"]:has(iframe[height="0"]) {{
     position: absolute; height: 0; margin: 0; overflow: hidden;
@@ -371,8 +433,17 @@ def inject_base_styles() -> None:
     """Call once near the top of every page, after the title/header. CSS
     injection is idempotent (Streamlit reruns the whole script on every
     interaction, so this runs again each time; repeating the same <style>
-    tag has no adverse effect), so there is no "already injected" guard to
-    maintain.
+    tag has no adverse effect - the browser just applies the same rules
+    twice, with no conflict since the values are byte-identical), so there
+    is no "already injected" guard to maintain.
+
+    Milestone 29.2: app.py ALSO calls this once, before render_sidebar, so
+    the stylesheet is tagged with the app's own main-script identity and
+    survives every page navigation (see app.py's own docstring for why);
+    each page's own call here is kept too, so a page still looks correct
+    even rendered outside app.py (e.g. in a test that loads one page file
+    directly), and the two calls together are still just one harmless
+    repeated <style> tag per run.
     """
     st.markdown(_BASE_CSS, unsafe_allow_html=True)
 
@@ -656,6 +727,62 @@ def render_creative_placeholder(
             footer()
 
 
+def render_creative_brief(*, angle_label: str, strategic_idea: str, why_this_exists: str) -> None:
+    """A pre-generation "creative direction" card (Milestone 28.4, restored
+    to the earlier card's proportions in 28.5): what Creative Studio
+    proposes to explore for this concept, presented as a brief to review,
+    never as a near-finished ad. Reuses the same tall "empty creative slot"
+    shape and dashed placeholder box as the pre-Creative-Studio-V3 card
+    (badge, then a dashed box where the eventual ad will appear, "AD NOT
+    GENERATED YET" / "A finished ad will appear here"), which is what makes
+    the pre- and post-generation states in the SAME grid position visually
+    obvious as one becoming the other. The 28.4 correction remains: nothing
+    below the box is ad copy. Only the concept's own two real strategic
+    fields appear (`angle` as "Strategic idea", `why_this_concept_exists` as
+    "Why we're exploring this") - no headline, no body copy, no CTA pill, no
+    Include-in-experiment control (nothing exists yet to include).
+    `wide_labels` forces each field to its own full-width row regardless of
+    card width, since these are multi-sentence strategy statements, not
+    short values meant to sit side by side.
+
+    Sits in the same three-column row as render_generated_ad once a concept
+    is generated, so it inherits the same equal-height-row CSS: reviewing
+    three directions of uneven length still lines up as three even cards.
+
+    Milestone 28.6: the base stylesheet's equal-height-row rule pins a
+    card's own LAST element to the bottom (`margin-top: auto`) so a
+    footer control (Retry/Regenerate/Include, in render_creative_placeholder
+    and render_generated_ad) sits flush at the card's bottom across a row of
+    uneven cards. This card has no footer, so its field_grid - the actual
+    body content - WAS that last element, and got pushed down by whatever
+    empty space the row's equal-height stretch left, instead of following
+    the dashed box immediately: the shorter a concept's own angle/rationale
+    text, the further down its content started. A trailing, invisible
+    (display:none) marker div, always the true last DOM child, absorbs that
+    rule instead: display:none removes it from the flex layout entirely, so
+    :last-child matches it rather than field_grid, and field_grid flows
+    top-down right after the dashed box in every card regardless of its own
+    or its siblings' text length; only the leftover space at the card's
+    bottom (below the content) still grows or shrinks, exactly as the equal-
+    height row already intends.
+    """
+    with card("standard"):
+        badge_row([angle_label.upper()])
+        st.markdown(
+            '<div style="border: 1px dashed rgba(127, 127, 127, 0.35); border-radius: 8px; '
+            'padding: 1.4rem 1rem; text-align: center; margin-bottom: 0.6rem; opacity: 0.8;">'
+            '<div style="font-weight: 600; letter-spacing: 0.04em; font-size: 0.85rem;">AD NOT GENERATED YET</div>'
+            '<div class="ui-quiet" style="margin-top: 0.2rem;">A finished ad will appear here</div>'
+            "</div>",
+            unsafe_allow_html=True,
+        )
+        field_grid(
+            [("Strategic idea", strategic_idea), ("Why we're exploring this", why_this_exists)],
+            wide_labels=("Strategic idea", "Why we're exploring this"),
+        )
+        st.markdown('<div style="display:none;"></div>', unsafe_allow_html=True)
+
+
 def render_generated_ad(
     *,
     angle_label: str,
@@ -912,3 +1039,73 @@ def titled_summary(title: str, summary: str, note_label: str | None = None, note
             parts.append(f'<div class="ui-titled-note-label">{safe(note_label)}</div>')
         parts.append(f'<div class="ui-titled-note">{safe(note)}</div>')
     st.markdown("".join(parts), unsafe_allow_html=True)
+
+
+def safe_paragraph(text: str) -> None:
+    """A normal-weight paragraph of data-derived text (Milestone 29): the
+    same visual weight as st.write on a plain string, but HTML-escaped
+    ($ as an entity), so a sentence assembled from real values - a currency
+    amount, a percentage, several such values in one sentence - never gets
+    silently reinterpreted as Markdown/LaTeX by st.write's own markdown
+    handling (Streamlit pairs two "$" into an inline math span, which is
+    exactly what broke evidence summaries like "$6,403 spend; ... $5,102
+    spend"). Use this instead of st.write/st.markdown for any string built
+    from data rather than typed directly in this codebase; a literal string
+    written directly here (no data values inside it) has nothing to escape
+    and can keep using st.write.
+    """
+    st.markdown(f'<div class="ui-paragraph">{html.escape(text).replace("$", "&#36;")}</div>', unsafe_allow_html=True)
+
+
+def render_evidence_item(label: str, detail: str, source: str, table=None) -> None:
+    """One piece of supporting Evidence inside a "View evidence" expander
+    (Milestone 29): a bold label, its detail, and its source, safely
+    escaped for the same reason as safe_paragraph. When `detail` is a
+    "; "-joined list of independent clauses (several qualifying styles'
+    own metrics, already assembled that way by the caller - see
+    agents/intelligence/engine.py's Performance Pattern evidence), it
+    renders as a short bulleted list instead of one dense run-on sentence;
+    a single clause renders exactly as before, one plain line. Purely a
+    presentation choice: never re-derives, reorders, or rewords the
+    evidence text itself, and the values are unchanged either way.
+    """
+    def safe(t: str) -> str:
+        return html.escape(t).replace("$", "&#36;")
+
+    clauses = [c.strip() for c in detail.split("; ") if c.strip()]
+    if len(clauses) > 1:
+        body = "<ul class=\"ui-evidence-list\">" + "".join(f"<li>{safe(c)}</li>" for c in clauses) + "</ul>"
+    else:
+        body = f'<div class="ui-evidence-detail">{safe(detail)}</div>'
+    st.markdown(f'<div class="ui-evidence-label">{safe(label)}</div>{body}', unsafe_allow_html=True)
+    st.caption(f"Source: {source}")
+    if table is not None:
+        st.dataframe(table, hide_index=True, use_container_width=True)
+
+
+def insight_blocks(blocks: list[tuple[str, str]]) -> None:
+    """A compact, labeled multi-part explanation (Milestone 29) - "What
+    we're seeing" / "Evidence" / "Keep in mind" - for analysis that already
+    separates into that many distinct, ALREADY-COMPUTED pieces (e.g. a
+    Performance Agent's own learning_statement and limitations fields).
+    Each block is exactly one of the caller's own existing strings, never
+    re-derived, reworded, or split out of a single paragraph here; this
+    replaces an unlabeled text_stack of the same two strings with labels
+    that make the distinction between them explicit at a glance. One
+    element, so spacing between blocks stays fixed regardless of text
+    length. Reuses the same small-uppercase-label-over-text idiom as
+    titled_summary's "WHY IT MATTERS" note. Plain text, HTML-escaped ($ as
+    an entity). A block with empty/falsy text is skipped, so an optional
+    piece never leaves a bare label on screen.
+    """
+    def safe(t: str) -> str:
+        return html.escape(t).replace("$", "&#36;")
+
+    parts = [
+        f'<div class="ui-insight-block"><div class="ui-insight-label">{safe(label)}</div>'
+        f'<div class="ui-insight-text">{safe(text)}</div></div>'
+        for label, text in blocks
+        if text
+    ]
+    if parts:
+        st.markdown(f'<div class="ui-insight-blocks">{"".join(parts)}</div>', unsafe_allow_html=True)

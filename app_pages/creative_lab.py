@@ -48,7 +48,11 @@ tell demo mode apart from a fresh live run. Nothing is included in an
 experiment by default: the marketer explicitly includes finished ads, and
 "Prepare selected experiments" hands Experiments the EXACT generated asset
 ids/paths and copy (see _arm_from_creative); Experiments never regenerates or
-rewrites them.
+rewrites them. Milestone 28.4: an idle concept renders as a creative
+DIRECTION/brief (ui.render_creative_brief: angle name, strategic idea, why
+it's worth exploring), never as an ad-shaped card; only a "ready" concept
+renders as a real ad (ui.render_generated_ad), so the two states are
+visually unmistakable, not just differently worded.
 
 "Prepare selected experiments" can build MORE THAN ONE experiment handoff
 at once (one per opportunity with at least one included ad): see
@@ -81,11 +85,7 @@ from core.shell import current_client
 
 def _render_evidence(evidence_list) -> None:
     for e in evidence_list:
-        st.markdown(f"**{e.label}**")
-        st.write(e.detail)
-        st.caption(f"Source: {e.source}")
-        if e.table is not None:
-            st.dataframe(e.table, hide_index=True, use_container_width=True)
+        ui.render_evidence_item(e.label, e.detail, e.source, e.table)
 
 
 def _evidence_strip_line(strip: dict) -> str:
@@ -101,24 +101,30 @@ def _evidence_strip_line(strip: dict) -> str:
 
 
 def _render_plan_summary(plan: CreativePlan) -> None:
-    ui.section_header(
-        "Creative Plan",
-        "Built from customer signals, current creative coverage, campaign performance, and previous learnings.",
-    )
+    """One compact orientation line before the plan itself (Milestone 29):
+    replaces the old separate "Creative Plan" section header + its own
+    explanatory subtitle + a bold opportunity/concept count + a muted
+    evidence-strip line - four stacked typographic levels all announcing
+    that a Creative Plan exists, which the page's own title and the plan
+    content right below it already make obvious. Carries exactly the same
+    real counts (nothing added, nothing dropped: reuses
+    _evidence_strip_line unchanged), just as one quiet line rather than a
+    small header section of its own, so it never competes with the actual
+    creative strategy and the first Creative Opportunity appears sooner.
+    """
     n_concepts = sum(len(family.concepts) for family in plan.families)
     n_families = len(plan.families)
-    st.markdown(
-        f"**{n_families} opportunit{'y' if n_families == 1 else 'ies'} · {n_concepts} concept"
-        f"{'s' if n_concepts != 1 else ''} planned**"
+    ui.muted(
+        f"{n_families} opportunit{'y' if n_families == 1 else 'ies'} · {n_concepts} concept"
+        f"{'s' if n_concepts != 1 else ''} planned · {_evidence_strip_line(plan.evidence_strip)}"
     )
-    ui.muted(_evidence_strip_line(plan.evidence_strip))
 
 
 def _render_strategist_synthesis(plan: CreativePlan) -> None:
     ui.section_header("What the Strategist found", level="subsection")
     with ui.card("quiet"):
         ui.badge_row(["Strategist"])
-        st.write(plan.strategist_summary)
+        ui.safe_paragraph(plan.strategist_summary)
 
 
 def _render_cross_cutting_context(plan: CreativePlan) -> None:
@@ -127,7 +133,7 @@ def _render_cross_cutting_context(plan: CreativePlan) -> None:
     ui.section_header("Strategy-wide context", level="subsection")
     with ui.card("standard"):
         ui.badge_row(["Cross-cutting context", plan.cross_cutting_finding.type.upper()])
-        st.write(plan.cross_cutting_context)
+        ui.safe_paragraph(plan.cross_cutting_context)
         with st.expander("View evidence"):
             _render_evidence(plan.cross_cutting_finding.evidence)
 
@@ -258,9 +264,34 @@ def _selected_creatives(family: CreativeFamily) -> list[tuple]:
 def _render_concept(client_id: str, family: CreativeFamily, concept) -> None:
     """One concept card in its current generation state. Every state ends
     with the same include checkbox as the card's own last element (so it
-    aligns across the row); it is disabled until a finished ad exists, and
-    never checked by default: the marketer explicitly chooses what is
-    tested.
+    aligns across the row).
+
+    Milestone 28.9: the checkbox is checked BY DEFAULT once a concept
+    reaches "ready", and the marketer can still uncheck any of them. This
+    relies on Streamlit's own widget semantics rather than any bookkeeping:
+    `st.checkbox(..., value=X, key=K)` only ever uses `value` to seed
+    st.session_state[K] the very FIRST time key K is created; every later
+    call with the same key, in this run or any future rerun, is a no-op as
+    far as `value` is concerned - the widget just reflects whatever is
+    already in session_state (the marketer's own last choice).
+
+    That guarantee only holds if the widget is actually instantiated on
+    EVERY run once it exists: Streamlit drops a widget's session_state entry
+    for any run where that widget's call is skipped entirely, so the
+    checkbox must render on every run from a concept's first "ready" onward,
+    never conditionally omitted, or a later run recreating it would look
+    like a fresh widget and re-apply value=True over a manual uncheck. So it
+    renders whenever `status == "ready"`, AND during "pending" once
+    `creative is not None` (Regenerate: the concept was already ready, still
+    holds its PREVIOUS creative while the new one generates, per
+    _request_generation/_process_pending_live - the checkbox must keep
+    rendering through that transient window too). It is never rendered for
+    idle/first-time-pending/failed/unavailable, where `creative is None`:
+    that first "ready" (or first successful Retry) is always the key's
+    genuine first-ever creation, so `value=True` correctly initializes it
+    checked. Reset Demo already deletes every "clab_include_*" key
+    (_reset_demo_reveal_state), so the next generation's first "ready"
+    render is again a first-ever creation and initializes checked again.
     """
     slot = _slot_for(client_id, family, concept)
     status = slot["status"]
@@ -275,7 +306,8 @@ def _render_concept(client_id: str, family: CreativeFamily, concept) -> None:
             st.button("Retry", key=f"clab_retry_{cid}", on_click=_request_generation, args=([cid], False))
         elif status == "ready" and not demo_mode:
             st.button("Regenerate", key=f"clab_regen_{cid}", on_click=_request_generation, args=([cid], True))
-        st.checkbox("Include in experiment", value=False, key=include_key, disabled=status != "ready")
+        if status == "ready" or (status == "pending" and creative is not None):
+            st.checkbox("Include in experiment", value=True, key=include_key)
 
     if status == "ready" and creative is not None and creative.ad_spec is not None:
         spec = creative.ad_spec
@@ -317,24 +349,21 @@ def _render_concept(client_id: str, family: CreativeFamily, concept) -> None:
             why_this_exists=concept.why_this_concept_exists, footer=_footer,
         )
     else:
-        # Milestone 28.3: restored, byte-for-byte, the pre-Creative-Studio-V3
-        # idle presentation (Milestones 22-26, before live generation existed
-        # at all): the deterministic placeholder copy Creative Studio's
-        # preview layer already computes for every concept
-        # (concept.headline/primary_text/cta/reason_to_believe), inside
-        # render_creative_placeholder's own DEFAULT box ("CREATIVE PREVIEW" /
-        # "Image generation added next" - no box_title/box_subtitle/note
-        # override). A marketer reviewing an ungenerated concept, in either
-        # mode, sees a real, concrete strategic execution to react to, never
-        # a status label about generation machinery ("AD NOT GENERATED YET").
-        ui.render_creative_placeholder(
+        # Milestone 28.4: a concept with no finished ad yet is presented as a
+        # CREATIVE DIRECTION / BRIEF, not as a near-finished ad missing only
+        # its photo. Two prior passes (28.2's "AD NOT GENERATED YET" box and
+        # 28.3's restored render_creative_placeholder, headline/body copy/CTA
+        # pill included) both kept the same ad-shaped card - a badge, an
+        # image-shaped box, a headline, a paragraph, a CTA button - which
+        # reads as "this ad basically exists" no matter what the box says.
+        # ui.render_creative_brief shares no visual language with an ad card
+        # at all: just the angle name plus the concept's own real strategy
+        # fields (`angle`, `why_this_concept_exists`); no image slot, no CTA,
+        # no Include-in-experiment control (nothing exists yet to include).
+        ui.render_creative_brief(
             angle_label=concept.concept_name,
-            headline=concept.headline,
-            primary_text=concept.primary_text,
-            cta=concept.cta,
-            reason_to_believe=concept.reason_to_believe,
+            strategic_idea=concept.angle,
             why_this_exists=concept.why_this_concept_exists,
-            footer=_footer,
         )
 
 
@@ -555,12 +584,16 @@ def _render_family(client_id: str, index: int, family: CreativeFamily) -> None:
             st.caption(f"{opportunity.confidence.capitalize()} confidence")
             _render_evidence(opportunity.evidence)
 
-    ui.section_header("Creative concepts", level="subsection")
-    _render_generation_controls(client_id, family)
+    # Milestone 28.4: "Generate creatives" now sits BELOW the three concept
+    # cards, not above them, so the section reads in order - review the
+    # three directions, then ask Creative Studio to build them - rather than
+    # presenting the action before there is anything to react to.
+    ui.section_header("Creative concepts", "Three directions derived from the strategy above.", level="subsection")
     concept_cols = st.columns(len(family.concepts))
     for col, concept in zip(concept_cols, family.concepts):
         with col:
             _render_concept(client_id, family, concept)
+    _render_generation_controls(client_id, family)
     _render_generation_details(family)
 
 

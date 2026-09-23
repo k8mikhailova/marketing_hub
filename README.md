@@ -5,10 +5,18 @@ incremental portfolio/demo project. This README is the source of truth for the
 project's intent, architecture, and rules. Read it before making any structural
 changes.
 
-**Current status: Milestone 28.3 (restored pre-generation Creative Lab
-presentation) complete**, on top of Milestone 28.2 (fresh-run demo
-presentation), Milestone 28.1 (demo generation playback), Milestone 28
-(Creative Studio V3), and Milestone 27 (final core UI polish), on top of Milestone 25 (product-model consistency pass across
+**Current status: Milestone 29.2 (stable stylesheet + fixed sidebar
+structure across page navigation) complete**, on top of Milestone 29.1
+(sidebar active-page fix, all nav items real page_links), Milestone 29
+(post-demo UX/
+presentation polish pass), Milestone 28.9 (default-checked generated creatives)
+and Milestone 28.8 (Overview period control), on top of Milestone
+28.5 (creative-direction card proportions restored), Milestone 28.4
+(creative-direction briefs, pre-generation), Milestone 28.3 (restored
+pre-generation Creative Lab
+presentation), Milestone 28.2 (fresh-run demo presentation), Milestone 28.1
+(demo generation playback), Milestone 28 (Creative Studio V3), and Milestone
+27 (final core UI polish), on top of Milestone 25 (product-model consistency pass across
 Overview, Insights, Creative Lab, Experiments), on top of Milestone 24 (Experiments visual polish + Insights
 workflow correction) and Milestone 23 (Experiments V2:
 multi-arm concept experiments, no mandatory baseline), on top of Milestone 22
@@ -3326,6 +3334,237 @@ committed spec beyond Milestone 1.
   to the original idle presentation; zero provider calls throughout; the six
   cached files are confirmed byte-identical before and after; live mode is
   unaffected.
+- **Milestone 28.4 (done): pre-generation concepts are creative-direction
+  BRIEFS, not ad-shaped cards. `core/ui.py` (new `render_creative_brief`)
+  and `app_pages/creative_lab.py` only; no other file changed.**
+  28.3's restoration turned out to be the wrong target: the pre-V3 idle card
+  it restored (badge, headline, full ad body copy, CTA pill, inside a
+  bordered card) is not visually distinct from a finished ad missing only
+  its photo, so the before/after states never looked unmistakably different
+  on screen, which is what this milestone corrects. A concept with no
+  finished ad now renders through a new primitive,
+  `ui.render_creative_brief`, sharing no visual language with an ad card at
+  all: no image slot, no "Creative preview" box, no headline/body copy, no
+  CTA pill, no Include-in-experiment control (nothing exists yet to
+  include). It shows exactly three things, all real existing fields, none
+  invented: the concept's own angle name (`concept.concept_name`) as the
+  card's badge, its `angle` field as "Strategic idea" (the actual
+  strategic-idea sentence a concept's own angle function writes, e.g. "Open
+  with the customer's own problem, in their own language, before
+  introducing the product." - never ad copy), and `why_this_concept_exists`
+  as "Why we're exploring this" (the concept's own rationale/hypothesis).
+  Both render through the same labeled-field grid (`ui.field_grid`) already
+  used for the Creative Opportunity's own strategy fields above, so a brief
+  visibly belongs to the same "planning" family as the strategy card above
+  it, not to the ad-card family below it. "Generate creatives" now renders
+  BELOW the three brief cards instead of above them (review the directions,
+  then act), and the section header gained a one-line subtitle ("Three
+  directions derived from the strategy above."). ready/pending/failed/
+  unavailable concepts are unchanged: a generated ad still renders through
+  `ui.render_generated_ad` exactly as before (real image, Primary text,
+  Headline, Description, CTA, rationale, Include control), so the
+  transformation on generation is now Strategy -> creative-direction briefs
+  -> (click Generate, ~2.5s, zero provider calls) -> real ad cards, two
+  structurally different layouts, not the same card with different words
+  inside. Reset demo, opportunity independence, the six cached creatives,
+  the manifest, the pipeline, and live mode are all unchanged; verified via
+  the exact same 6 cached creatives reappearing byte-identical after the
+  full generate/reset cycle.
+- **Milestone 28.5 (done): restored the earlier card's tall "empty creative
+  slot" proportions inside `ui.render_creative_brief`. `core/ui.py` only.**
+  28.4 got the CONTENT right (no ad copy, no CTA, no checkbox pre-
+  generation) but dropped the earlier card's visual weight in the process.
+  `render_creative_brief` now renders, in order: the badge, then the same
+  dashed placeholder box the pre-V3 card used ("AD NOT GENERATED YET" / "A
+  finished ad will appear here") occupying the same visual position a
+  generated ad's image will later fill, then the two real strategic fields
+  ("Strategic idea" = `concept.angle`, "Why we're exploring this" =
+  `concept.why_this_concept_exists`). Still no headline, body copy, CTA
+  pill, image, or Include-in-experiment control - 28.4's correction holds;
+  only the box and proportions are back. Generate creatives still renders
+  below the three cards; a generated concept still renders unchanged via
+  `render_generated_ad`.
+- **Milestone 28.8 (done): Overview's period control now matches Customer
+  Signals instead of a raw custom date-range picker. `core/analytics.py`
+  (new `PERIOD_OPTIONS`/`DEFAULT_PERIOD_LABEL`/`resolve_period`, promoted
+  from `app_pages/signals.py`), `app_pages/overview.py`, `app_pages/
+  signals.py` (now imports the shared definitions instead of defining its
+  own) only.** Overview's `st.date_input` custom range is replaced by the
+  same "Last 7 days / Last 30 days / Last 60 days" selectbox as Customer
+  Signals (default "Last 30 days"), both pages now reading the identical
+  `PERIOD_OPTIONS`/`DEFAULT_PERIOD_LABEL` constants and the same
+  `resolve_period(data_min, data_max, period_days)` helper rather than two
+  independently maintained period concepts. Everything downstream of
+  `start`/`end` is unchanged: `previous_period`/`has_full_period`/
+  `compare_periods` still decide the KPI deltas, `filter_date_range`/
+  `aggregate_performance` still drive the trend chart, so both actually
+  recompute per period, not a cosmetic label over frozen numbers. Evidence
+  discipline falls out of the existing `has_full_period` check with no
+  special-casing: the demo dataset has exactly 60 days of history, so "Last
+  60 days" selects the entire dataset as the current window, whose prior
+  60-day window would start before the data even begins - `comparison_valid`
+  is already False in that case, and the KPI tiles already show "Not enough
+  prior history for a full comparison period, showing totals only." instead
+  of a delta; "Last 7 days" and "Last 30 days" both have a full valid prior
+  window within the dataset. "What needs your attention" (findings) is not
+  period-scoped, before or after this change: it never read the old
+  date-range control either.
+- **Milestone 28.9 (done): a generated creative's "Include in experiment"
+  checkbox is now checked by default. `app_pages/creative_lab.py` only.**
+  Applies identically in demo and live mode. Relies on Streamlit's own
+  widget semantics, no extra bookkeeping: `st.checkbox(value=X, key=K)`
+  only ever uses `value` to seed `st.session_state[K]` the very first time
+  key `K` is created; a later call with the same key, on any rerun, is a
+  no-op for `value` and just reflects whatever is already in session state.
+  The checkbox therefore renders only once a concept is "ready" (or
+  "pending" with a previous creative still attached - Regenerate's transient
+  window; Streamlit clears a widget's session-state entry for any run where
+  its call is skipped entirely, so the checkbox must keep rendering through
+  that window too, or a manual uncheck would be silently wiped the moment
+  Regenerate finishes). It is never rendered for idle, a concept's own
+  first-ever pending/failed/unavailable state, so a concept's first "ready"
+  (or first successful Retry) is always that key's genuine first-ever
+  creation, and `value=True` is a real initialization, never a repeated
+  override: unchecking persists through any later rerun, another concept's
+  click, or a Regenerate on that same concept. Reset Demo already deleted
+  every `clab_include_*` key, so the next generation's first "ready" render
+  is again a first-ever creation and initializes checked again. Selection
+  and handoff logic (`_selected_creatives`, `_build_family_handoff`) are
+  unchanged: they already read whatever is in session state.
+- **Milestone 29 (done): post-demo UX/presentation polish pass, five items
+  from a real first walkthrough. No detector/threshold/Strategist/
+  simulation/Performance Agent logic, cached creatives, demo playback, or
+  synthetic data changed anywhere in this pass.**
+  1. **Evidence formatting bug, fixed at its shared cause.** A
+  "; "-joined, currency-heavy evidence sentence like "...$6,403 spend;
+  ...$5,102 spend" broke visually because `_render_evidence`
+  (`app_pages/intelligence.py` AND `app_pages/creative_lab.py`, identical
+  duplicated code) rendered it through plain `st.write`, and Streamlit's
+  own markdown renderer pairs two "$" into an inline LaTeX span. New
+  `core/ui.py` primitives replace both call sites: `render_evidence_item`
+  (HTML-escaped, "$" as an entity, so it never enters markdown/LaTeX
+  parsing at all - the same established pattern `text_stack`/`callout`/
+  `titled_summary` already used elsewhere; a "; "-joined multi-clause
+  detail now also renders as a short bulleted list instead of one dense
+  sentence, a values-preserving, string-split-only change) and
+  `safe_paragraph` (a plain escaped paragraph, same visual weight as
+  `st.write`). Applied everywhere the same class of bug could reach: both
+  `_render_evidence` implementations, Creative Lab's `strategist_summary`/
+  `cross_cutting_context`, Experiments' `learning_question`/
+  `_prepared_description`/`next_test.rationale`, and Customer Signals' own
+  raw customer-quote text (`row["text"]`, real free-text most likely to
+  contain stray `$`/`_`/`*`). No value, number, or wording changed.
+  2. **Sidebar: active-page treatment + spacing (revised in 29.1).** 29's
+  first attempt rendered the current page as a hand-styled, non-link
+  `<div>` instead of a `page_link`, matched to the link's box by hand. That
+  was the wrong fix: a `<div>` from `st.markdown` sits in a
+  `stMarkdownContainer`, which carries Streamlit's own `-1rem` bottom-
+  margin compensation for an assumed inner `<p>` (documented in this same
+  stylesheet's own "ROOT CAUSE of uneven card spacing" comment, from the
+  rhythm-card work); a `stPageLink` container never gets that
+  compensation. Swapping element types for exactly one nav item put that
+  mismatch on whichever page happened to be current, producing the
+  inconsistent, jumping spacing reported after the first version shipped.
+  29.1's fix: confirmed against Streamlit 1.37.1's own source
+  (`PageLink.tsx`/`styled-components.ts`, fetched from the tagged release)
+  that `isCurrentPage` is a React prop consumed only by an inline
+  background-color computation and a `boldLabel` flag passed into the
+  label's own markdown renderer - it never reaches the DOM as an
+  attribute, class, or `aria-*` marker, so no CSS selector could ever
+  target it directly (confirmed, not assumed). All five items now render
+  as real `st.sidebar.page_link` calls, always; `core/shell.py` renders one
+  invisible marker element immediately before the current page's own link,
+  and `core/ui.py` uses `:has()` (the same technique this stylesheet's own
+  rhythm-marker CSS already relies on) to select the very next
+  `[data-testid="stPageLink-NavLink"]` from that marker's presence -
+  same component, same per-item DOM wrapper as the other four; only
+  color/background/border-left/font-weight differ, nothing that affects
+  box size. `app.py` still calls `st.navigation(...)` before
+  `render_sidebar` (routing itself unaffected; `pg.run()` still runs last)
+  since `core/shell.py` still needs the current page's own title in
+  Python to place the marker - Streamlit exposes no other way to ask "is
+  this page current" from outside React.
+
+  **29.2: visible "reload" on every page click, fixed at both of its
+  causes; `app.py`/`core/shell.py`/`core/ui.py` only.** Diagnosed by
+  reading Streamlit 1.37.1's own frontend source (`App.tsx`/
+  `AppNavigation.ts`/`AppNode.ts`, fetched from the tagged release, blob
+  SHAs cross-checked against the tag's tree). `st.navigation()`-based apps
+  use "StrategyV2": on every page change, `filterMainScriptElements`
+  drops any element NOT tagged with the app's constant main-script
+  identity - which is everything the outgoing page itself rendered (main
+  content genuinely has to change; there's no skeleton/placeholder for
+  this path the way the older `pages/`-directory strategy has, so a brief
+  empty main area between pages is inherent to this Streamlit version and
+  not something either fix below touches) - but ALSO applies the same
+  filter to the sidebar region. Elements created directly in `app.py`
+  itself (as opposed to inside a page module) carry that persistent
+  main-script identity and so should already survive; two things were
+  undermining that:
+  - **Fix A:** `ui.inject_base_styles()` was called only inside each
+  `app_pages/*.py` module, so the shared stylesheet - which carries both
+  the `.block-container` width/padding AND the sidebar nav-link/active-
+  marker CSS - was tagged with the OUTGOING page's own identity and got
+  dropped on every navigation, reappearing only once the new page's own
+  call re-added it moments later. In that gap, the sidebar (whose
+  elements do persist) briefly rendered with no styling at all, and the
+  main content briefly reverted to Streamlit's raw full-width default.
+  `app.py` now also calls `ui.inject_base_styles()` itself, before
+  `render_sidebar`, so the stylesheet is tagged with the main-script
+  identity and never leaves the tree. Each page's own call is kept (a
+  harmless, byte-identical repeated `<style>` tag - `inject_base_styles`
+  takes no arguments, so two calls can never disagree - confirmed both by
+  that and by every existing page still rendering correctly loaded
+  standalone).
+  - **Fix B:** the marker (see 29.1) sat immediately before whichever
+  link was current, so the sidebar's own element sequence had a different
+  SHAPE depending on which page was active - and a shape change is
+  exactly what forces Streamlit's positional reconciliation to rebuild
+  rather than patch. `core/shell.py` now renders a marker before EVERY
+  link, always (`.ui-sidebar-marker` inactive / `.ui-sidebar-current-
+  marker` active); the sequence is 5 identical marker-then-link pairs on
+  every page, only the active marker's position (and thus which link the
+  `:has()` rule targets) changes. Both marker classes are equally
+  `display:none` (verified in `core/ui.py`'s own rendered stylesheet), so
+  this changes nothing about spacing - confirmed structurally: the
+  sidebar's element sequence for a different current page (tested via
+  `render_sidebar` directly, `current_title="Experiments"`) has the
+  identical shape as Overview's, just the active marker moved.
+  3. **Creative Lab's top simplified.** The old stack - page title,
+  subtitle, badge, a separate "Creative Plan" section header with its own
+  explanatory subtitle, a bold "N opportunities · N concepts planned"
+  line, then a muted evidence-strip line - collapses to title, the SAME
+  unchanged human subtitle, and one quiet line carrying the exact same
+  counts (`_evidence_strip_line`, untouched). Nothing computed here
+  changed, nothing was dropped: the "Creative Plan" header (redundant; the
+  page already communicates that) and the extra bold heading level are
+  gone, and the first Creative Opportunity now follows almost immediately.
+  `_render_strategist_synthesis`/`_render_cross_cutting_context` (real
+  strategy content, not administrative labeling) are unchanged in shape.
+  4. **Structured, scannable presentation, applied selectively.** New
+  `ui.insight_blocks([(label, text), ...])`: a compact labeled multi-part
+  block ("What we're seeing" / "Keep in mind"), used for Experiments'
+  "What we learned" (`analysis.learning_statement` and `.limitations` -
+  two already-separate Performance Agent fields, now explicitly labeled
+  instead of an unlabeled `text_stack` pair; same two strings, verbatim).
+  Multi-clause Evidence details becoming a bulleted list (see #1) serves
+  the same scannability goal. Deliberately left as prose, with reasoning:
+  `why_in_plan`/`strategist_summary`/`cross_cutting_context` and
+  `next_test.rationale` are each ALREADY-FUSED sentences (built by string
+  concatenation inside Strategist/Performance Agent code, off-limits this
+  pass); splitting them at the presentation layer would mean either
+  fragile sentence-boundary guessing or duplicating wording between the
+  page and the agent, neither of which "restructure existing separate
+  fields" the way the safe cases above do. No new "Evidence" metric strip
+  was added to the results hero either: the arms-comparison table directly
+  below it already shows every arm's exact numbers, and repeating a subset
+  of them would add repetition, not reduce it.
+  5. **Simulated experiment duration, from the real constant.** Experiments
+  imports `DEMO_TEST_DAYS` from `core/experiment_simulation.py` (unchanged,
+  still 30) and shows "Simulated test · 30 days" as a badge alongside
+  "Ready to test" (prepared view) and "Results"/"Demo synthetic results"
+  (results view) - once per experiment's own current state, never both at
+  once for the same experiment. No hardcoded "30" anywhere in the UI.
 - **Milestone 17D+ (not yet planned in detail):** Save Learning (turning
   the temporary human decision added in 17C/17C.1/17C.2 into a real,
   human-approved write to `approved_learnings.json`), Manager Agent, Ask

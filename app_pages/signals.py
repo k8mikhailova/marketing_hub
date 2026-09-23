@@ -7,28 +7,33 @@ interpret signals into marketing recommendations: that belongs to Insights
 intelligence.py) and, later, Creative Lab. All calculation lives in
 core/analytics.py; this file only wires filters to widgets and renders.
 """
-from datetime import timedelta
-
 import altair as alt
 import streamlit as st
 
 from core import ui
-from core.analytics import aggregate_signals, filter_signals, summarize_signals, theme_movement, theme_takeaway
+from core.analytics import (
+    DEFAULT_PERIOD_LABEL,
+    PERIOD_OPTIONS,
+    aggregate_signals,
+    filter_signals,
+    resolve_period,
+    summarize_signals,
+    theme_movement,
+    theme_takeaway,
+)
 from core.data import load_customer_signals
 from core.shell import current_client
 
 FEED_PAGE_SIZE = 10
 ALL_OPTION = "All"
 
-# Deterministic period options (Milestone 19, Part 2A), replacing a raw
-# date-range picker: each maps to a fixed lookback window ending at the
-# dataset's own most recent date, so "Last 30 days" always means the same
-# thing regardless of when the demo happens to run. previous_period/
-# has_full_period (core/analytics.py, unchanged) still decide whether a
-# full preceding window of the same length actually exists before this
-# page claims a comparison.
-PERIOD_OPTIONS = {"Last 7 days": 7, "Last 30 days": 30, "Last 60 days": 60}
-DEFAULT_PERIOD_LABEL = "Last 30 days"
+# PERIOD_OPTIONS/DEFAULT_PERIOD_LABEL originated here (Milestone 19, Part
+# 2A) and now live in core/analytics.py (Milestone 28.8), shared with
+# Overview, so both pages express "recent history" identically instead of
+# two independent implementations. previous_period/has_full_period
+# (core/analytics.py, unchanged) still decide whether a full preceding
+# window of the same length actually exists before this page claims a
+# comparison.
 
 # A theme chart's per-row and floor height (Part 2B): tall enough that
 # Vega-Lite never needs to drop a label to fit, and never so short (a
@@ -116,7 +121,7 @@ def _render_signal_entry(row) -> None:
         ui.badge_row([row["source"], row["demo_theme_label"]])
     with date_col:
         ui.muted(row["date"].strftime("%Y-%m-%d"))
-    st.write(row["text"])
+    ui.safe_paragraph(row["text"])
     ui.muted(
         f"{row['product_context']} · {_humanize_label(row['demo_intent_label'])} · "
         f"{_humanize_label(row['demo_sentiment_label'])}"
@@ -144,8 +149,7 @@ with filter_cols[0]:
         key="signals_period",
     )
 period_days_selected = PERIOD_OPTIONS[period_label]
-end = data_max
-start = max(data_min, data_max - timedelta(days=period_days_selected - 1))
+start, end = resolve_period(data_min, data_max, period_days_selected)
 
 product_options = [ALL_OPTION] + sorted(signals["product_context"].unique())
 with filter_cols[1]:

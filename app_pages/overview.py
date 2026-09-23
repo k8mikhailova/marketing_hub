@@ -30,8 +30,6 @@ quiet "View Insights" link remains. Experiment learnings finished this
 session (Performance Agent output) appear in their own labeled group after
 the current findings and never displace them.
 """
-from datetime import timedelta
-
 import altair as alt
 import pandas as pd
 import streamlit as st
@@ -39,7 +37,16 @@ import streamlit as st
 from agents.intelligence.engine import generate_findings
 from agents.performance.engine import EVIDENCE_STRENGTH_LABELS
 from core import ui
-from core.analytics import aggregate_performance, compare_periods, filter_date_range, has_full_period, previous_period
+from core.analytics import (
+    DEFAULT_PERIOD_LABEL,
+    PERIOD_OPTIONS,
+    aggregate_performance,
+    compare_periods,
+    filter_date_range,
+    has_full_period,
+    previous_period,
+    resolve_period,
+)
 from core.data import load_customer_signals, load_performance_with_creatives
 from core.shell import current_client
 
@@ -192,18 +199,19 @@ ui.section_header("Account performance", "How is marketing performing right now?
 
 data_min = joined["date"].min().date()
 data_max = joined["date"].max().date()
-default_start = max(data_min, data_max - timedelta(days=29))
 
-selected_range = st.date_input(
-    "Date range",
-    value=(default_start, data_max),
-    min_value=data_min,
-    max_value=data_max,
+# Milestone 28.8: the same relative-period control as Customer Signals
+# (core.analytics.PERIOD_OPTIONS/DEFAULT_PERIOD_LABEL/resolve_period),
+# replacing the old raw custom date-range picker, so "Last 30 days" means
+# the same fixed lookback window on both pages instead of two independently
+# defined period concepts.
+period_label = st.selectbox(
+    "Period", list(PERIOD_OPTIONS.keys()),
+    index=list(PERIOD_OPTIONS.keys()).index(DEFAULT_PERIOD_LABEL),
+    key="overview_period",
 )
-if isinstance(selected_range, (list, tuple)) and len(selected_range) == 2:
-    start, end = selected_range
-else:
-    start, end = default_start, data_max
+period_days_selected = PERIOD_OPTIONS[period_label]
+start, end = resolve_period(data_min, data_max, period_days_selected)
 
 period_days = (end - start).days + 1
 prev_start, prev_end = previous_period(start, end)
