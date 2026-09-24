@@ -121,19 +121,33 @@ def _render_plan_summary(plan: CreativePlan) -> None:
 
 
 def _render_strategist_synthesis(plan: CreativePlan) -> None:
+    """Milestone 31: shown as labeled blocks (ui.insight_blocks) instead of
+    one paragraph that ran the actual plan straight into an unrelated
+    tone-context aside. Same two pieces plan.strategist_summary already
+    joins into one string (plan.strategist_summary_parts), just visually
+    separated; the second block is simply skipped (insight_blocks' own
+    behavior) on the rare plan with no cross-cutting finding to note.
+    """
     ui.section_header("What the Strategist found", level="subsection")
     with ui.card("quiet"):
         ui.badge_row(["Strategist"])
-        ui.safe_paragraph(plan.strategist_summary)
+        plan_line, aside = plan.strategist_summary_parts
+        ui.insight_blocks([("What we're seeing", plan_line), ("Also worth noting", aside)])
 
 
 def _render_cross_cutting_context(plan: CreativePlan) -> None:
-    if not plan.cross_cutting_context or plan.cross_cutting_finding is None:
+    """Milestone 31: shown as labeled blocks instead of one paragraph that
+    used to state the same statistic twice before explaining the travel
+    rule. Same two pieces plan.cross_cutting_context already joins into one
+    string (plan.cross_cutting_context_parts), just visually separated.
+    """
+    if not plan.cross_cutting_context_parts or plan.cross_cutting_finding is None:
         return
     ui.section_header("Strategy-wide context", level="subsection")
     with ui.card("standard"):
         ui.badge_row(["Cross-cutting context", plan.cross_cutting_finding.type.upper()])
-        ui.safe_paragraph(plan.cross_cutting_context)
+        what_we_see, how_we_use_it = plan.cross_cutting_context_parts
+        ui.insight_blocks([("What we're seeing", what_we_see), ("How we're using it", how_we_use_it)])
         with st.expander("View evidence"):
             _render_evidence(plan.cross_cutting_finding.evidence)
 

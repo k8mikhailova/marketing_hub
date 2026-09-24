@@ -5,9 +5,9 @@ incremental portfolio/demo project. This README is the source of truth for the
 project's intent, architecture, and rules. Read it before making any structural
 changes.
 
-**Current status: Milestone 30.1 (markdown-heading typography fix) complete**,
-on top of Milestone 30 (Jira-inspired typography: Inter, centralized
-in `core/ui.py`), Milestone 29.2 (stable stylesheet + fixed sidebar
+**Current status: Milestone 31 (marketing-teammate voice pass across every
+agent's generated text) complete**, on top of Milestone 30.1 (markdown-heading
+typography fix), Milestone 30 (Jira-inspired typography: Inter, centralized
 in `core/ui.py`), Milestone 29.2 (stable stylesheet + fixed sidebar
 structure across page navigation), Milestone 29.1
 (sidebar active-page fix, all nav items real page_links), Milestone 29
@@ -3662,6 +3662,66 @@ committed spec beyond Milestone 1.
   calls, so they were already covered before this fix and are unaffected
   by it either way. Not verified: actual rendered appearance - no
   browser available.
+- **Milestone 31 (done): marketing-teammate voice pass across every agent's
+  generated text, plus a load-bearing fingerprint fix it uncovered.**
+  Rewrote the actual agent-generated wording (not just UI labels) in
+  `agents/intelligence/engine.py` (the three real finding types: Performance
+  Pattern, Emerging Opportunity, Messaging Gap), `agents/strategist/
+  creative_plan.py` (the Strategist's cross-opportunity summary and
+  cross-cutting performance context), `agents/creative_studio/engine.py`
+  (only each concept's `angle`/`why_this_concept_exists`, never the
+  customer-facing `headline`/`primary_text`/`reason_to_believe`/
+  `visual_direction`), and `agents/performance/engine.py` (the Performance
+  Agent's headline, evidence-strength reason, learning statement,
+  limitations, and recommended next test), plus the static "Proposed
+  learning" disclaimer and results-page copy in `app_pages/experiments.py`.
+  Goal: sound like a marketer who has actually looked at the account, not a
+  consultant's report or a chatbot performing a personality - shorter
+  sentences, light first-person only where it fits ("I'd explore...", never
+  forced), technical metrics (ROAS, CTR) kept but explained in plain
+  language, "That's not a fluke" replaced with "There's enough volume here
+  to take the comparison seriously," synthetic experiment results described
+  as "pulling ahead in this comparison" rather than "a real edge." The
+  mechanically-appended "subject to human review" boilerplate and the
+  `.rstrip("?")` bug that embedded the raw learning question verbatim into
+  a sentence are both gone. Evidence-tier labels are untouched: still
+  exactly Limited/Directional/Moderate, never Strong/Confirmed/Proven/
+  Winner, and an insufficient-evidence result still never names a leading
+  concept. In Creative Lab, "What the Strategist found" and "Strategy-wide
+  context" now render as short labeled blocks via the existing
+  `ui.insight_blocks` (Milestone 29) instead of one dense paragraph -
+  `CreativePlan` gained additive `strategist_summary_parts`/
+  `cross_cutting_context_parts` tuple fields alongside its existing joined-
+  string fields (the string form is kept unchanged in type since it also
+  feeds live generation as `performance_context`).
+  Reworking the concepts' `angle`/`why_this_concept_exists` text surfaced a
+  real bug, not just a wording one: `agents/creative_studio/
+  creative_store.py`'s `plan_fingerprint()` hashed that prose as part of
+  the strategy-identity fingerprint used to decide whether a cached
+  creative still matches the current strategy, so copy-editing a concept's
+  wording silently invalidated every already-generated creative - breaking
+  demo playback and, in live mode, defeating the zero-provider-call reuse
+  check that exists specifically to avoid real paid API calls. Fixed by
+  excluding `angle`/`why_this_concept_exists` from the fingerprint payload
+  (each concept's `concept_id` already uniquely identifies which of the 3
+  angles it is, so the strategy identity doesn't need the prose too), then
+  recomputing and updating only the `plan_fingerprint`/`creative_key`
+  fields in `demo_playback_manifest.json` and the six real cached
+  creatives' sidecar files - verified via diff that nothing else in those
+  files (image bytes, copy, prompts, provider/model/generated_at) changed.
+  Verification: all 13 existing scratchpad suites updated only where an
+  assertion legitimately depended on old wording or an obsolete
+  cross-milestone guard, never to weaken an evidence or analytical check,
+  plus a new focused suite (`milestone_31_voice_test.py`, 39 checks) for
+  limited-evidence language, synthetic-result labeling, no unsupported
+  certainty, the Strategist's opportunity-vs-supporting-context split, no
+  duplicated caveats, and no verbatim learning-question insertion. Full
+  regression: 14 suites, 733 checks, 0 failures. `pyflakes` clean and zero
+  em-dashes across every file touched. Untouched: every underlying metric/
+  threshold/evidence source, product/funnel-stage scope, the two Creative
+  Lab opportunities and three concepts each, the experiment simulation
+  logic itself, human review before a proposed learning becomes durable,
+  and all six real cached creatives' actual ad copy and images.
 - **Milestone 17D+ (not yet planned in detail):** Save Learning (turning
   the temporary human decision added in 17C/17C.1/17C.2 into a real,
   human-approved write to `approved_learnings.json`), Manager Agent, Ask

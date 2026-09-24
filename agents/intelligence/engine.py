@@ -266,18 +266,18 @@ def _detect_emerging_opportunities(joined: pd.DataFrame, ctx: dict) -> tuple[lis
             cited_cells.add((perf_summary["product_name"], perf_summary["funnel_stage"]))
 
         why_it_matters = (
-            f'Customer conversation about "{theme}" is growing, but creative for {products_label} rarely '
-            f"leads with it, so this may be an untapped angle worth testing."
+            f"Customers are telling us what matters to them, and it's a chance for "
+            f"{products_label} to speak to it directly."
         )
-        recommendation = f'Explore a "{theme}"-led concept for {products[0]}'
+        recommendation = f'Worth trying a "{theme}"-led concept for {products[0]}'
         if perf_summary:
             why_it_matters += (
-                f' Within {perf_summary["context"]}, {_humanize(perf_summary["candidate_style"])} messaging '
-                f"already shows a stronger balance of attention and conversion efficiency than other "
-                f"qualifying styles in that same context."
+                f' There\'s also a useful clue already in hand: for {perf_summary["context"]}, '
+                f'{_humanize(perf_summary["candidate_style"])} messaging is already outperforming the other '
+                f"styles we've tried in that same context."
             )
-            recommendation += f', informed by {_humanize(perf_summary["candidate_style"])} messaging'
-        recommendation += ", while retaining what already works, subject to human review."
+            recommendation += f', built in that {_humanize(perf_summary["candidate_style"])} style'
+        recommendation += ", while keeping what's already working in the rest of the ad."
 
         findings.append(
             Finding(
@@ -285,9 +285,10 @@ def _detect_emerging_opportunities(joined: pd.DataFrame, ctx: dict) -> tuple[lis
                 type="Emerging Opportunity",
                 title=f"{theme} is growing faster than our creative coverage",
                 summary=(
-                    f'"{theme}" mentions rose from {info["previous_count"]} to {info["signal_count"]} in the '
-                    f"last {period_days} days, but only {coverage['primary_hook_count']} of "
-                    f"{coverage['relevant_creatives']} relevant creatives lead with it."
+                    f'Customer mentions of "{theme}" jumped from {info["previous_count"]} to '
+                    f'{info["signal_count"]} in the last {period_days} days, and only '
+                    f"{coverage['primary_hook_count']} of {coverage['relevant_creatives']} relevant creatives "
+                    f"lead with it."
                 ),
                 why_it_matters=why_it_matters,
                 confidence="medium",
@@ -331,8 +332,8 @@ def _detect_messaging_gaps(ctx: dict, exclude_themes: set) -> list[Finding]:
                     f"lead with it."
                 ),
                 why_it_matters=(
-                    f'Customers bring up "{theme}" often, but current {products_label} creative rarely puts '
-                    f"it front and center, which may be a missed way to speak to them."
+                    f'Customers bring up "{theme}" often, but our {products_label} creative rarely puts '
+                    f"it front and center, which could be a straightforward way to speak more directly to them."
                 ),
                 confidence="low",
                 evidence=[
@@ -356,7 +357,7 @@ def _detect_messaging_gaps(ctx: dict, exclude_themes: set) -> list[Finding]:
                 ],
                 products=products,
                 themes=[theme],
-                recommended_next_step=f'Consider a "{theme}"-led concept for {products[0]}, subject to human review.',
+                recommended_next_step=f'Worth trying a "{theme}"-led concept for {products[0]}.',
             )
         )
     return findings
@@ -435,17 +436,17 @@ def _detect_performance_patterns(joined: pd.DataFrame, exclude_cells: set) -> li
             Finding(
                 finding_id=f"performance_pattern::{_slug(product)}::{_slug(stage)}",
                 type="Performance Pattern",
-                title=f"{style_label.capitalize()} is outperforming {runner_up_label} messaging for {product}",
+                title=f"{style_label.capitalize()} messaging is winning over {runner_up_label} for {product}",
                 summary=(
-                    f"Within {product} {stage}, {style_label} messaging returns "
-                    f"{leader['leader_roas']:.2f}x ROAS and {leader['leader_ctr']:.2%} CTR, ahead of the "
-                    f"next-best qualifying style at {leader['rest_best_roas']:.2f}x ROAS."
+                    f"{style_label.capitalize()} messaging is ahead for {product} {stage}: "
+                    f"{leader['leader_roas']:.2f}x ROAS and {leader['leader_ctr']:.2%} CTR, versus "
+                    f"{leader['rest_best_roas']:.2f}x ROAS for the next-best style."
                 ),
                 why_it_matters=(
-                    f"{style_label.capitalize()} messaging already leads on both attention and efficiency in "
-                    f"this context, on ${leader['leader_spend']:,.0f} of spend and "
-                    f"{int(leader['leader_purchases'])} purchases, enough volume to trust the comparison, "
-                    f"though it may not hold in a different product or funnel stage."
+                    f"There's enough volume here to take the comparison seriously "
+                    f"(${leader['leader_spend']:,.0f} spend, {int(leader['leader_purchases'])} purchases), "
+                    f"though it's specific to {product} {stage}, not a sign that {style_label} messaging "
+                    f"wins everywhere."
                 ),
                 confidence="high" if leader["leader_spend"] >= PERFORMANCE_MIN_SPEND * 2 else "medium",
                 evidence=[
@@ -459,8 +460,7 @@ def _detect_performance_patterns(joined: pd.DataFrame, exclude_cells: set) -> li
                 products=[product],
                 themes=[],
                 recommended_next_step=(
-                    f"Consider allocating incremental {product} {stage} spend toward {style_label} messaging, "
-                    f"subject to human review."
+                    f"Worth leaning into {style_label} messaging for {product} {stage}'s next batch of creative."
                 ),
             )
         )

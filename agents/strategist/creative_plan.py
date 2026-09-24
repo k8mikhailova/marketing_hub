@@ -72,43 +72,77 @@ class CreativePlan:
     cross_cutting_context: str | None = None
     evidence_strip: dict = field(default_factory=dict)
     generated_by: str = GENERATED_BY_PREVIEW
+    # Milestone 31: the same content as strategist_summary/cross_cutting_context,
+    # split into (headline, aside) so app_pages/creative_lab.py can show it as
+    # two scannable labeled blocks (ui.insight_blocks) instead of one dense
+    # paragraph. The joined single-string fields above are unchanged in type -
+    # cross_cutting_context specifically is also read as live-generation
+    # performance_context input (agents/creative_studio/pipeline.py, via
+    # app_pages/creative_lab.py), so it can't become a tuple itself.
+    strategist_summary_parts: tuple[str, str] = ("", "")
+    cross_cutting_context_parts: tuple[str, str] | None = None
+
+
+def cross_cutting_context_parts(finding: Finding) -> tuple[str, str]:
+    """The Strategist's own framing of a Performance Pattern finding as
+    plan-wide CONTEXT, never as a third family, as (what we're seeing, how
+    we're using it). Milestone 31: previously one paragraph that stated the
+    same statistic twice (the finding's own summary, then its why_it_matters,
+    which already restates the comparison before adding the volume/trust
+    detail) before finally explaining the travel rule; the full evidence and
+    volume numbers are already one click away via the finding on Insights,
+    so this note's own job is just to say what the pattern is and how far it
+    travels, once each, never to re-prove it's credible. Never adds a new
+    number or claim of its own.
+    """
+    what_we_see = finding.summary
+    how_we_use_it = (
+        "It's a tone cue for wherever a concept's own angle calls for it, not proof it wins in a different "
+        "product or funnel stage, and it never substitutes for a creative opportunity's own evidence."
+    )
+    return what_we_see, how_we_use_it
 
 
 def cross_cutting_context_note(finding: Finding) -> str:
-    """The Strategist's own framing of a Performance Pattern finding as
-    plan-wide CONTEXT, never as a third family: recombines the finding's own
-    summary/why_it_matters (which already names the exact product/funnel
-    stage it was observed in, and already says explicitly that it may not
-    hold elsewhere) with one plan-level sentence saying how far that context
-    is allowed to travel. Never adds a new number or claim of its own.
+    """The single-string form of cross_cutting_context_parts, unchanged in
+    type since it also doubles as live creative generation's
+    performance_context input (see CreativePlan's own docstring above).
     """
-    return (
-        f"{finding.summary} {finding.why_it_matters} For this plan: recognizable, natural customer language is "
-        "used as a general tone cue where a concept's own angle calls for it, but this pattern is supporting "
-        "context from one specific product and funnel stage, not proof that customer-language messaging wins in a "
-        "different context, so it never substitutes for a creative opportunity's own evidence."
-    )
+    what_we_see, how_we_use_it = cross_cutting_context_parts(finding)
+    return f"{what_we_see} {how_we_use_it}"
 
 
-def _strategist_summary(families: list[CreativeFamily], cross_cutting: Finding | None) -> str:
+def _strategist_summary_parts(families: list[CreativeFamily], cross_cutting: Finding | None) -> tuple[str, str]:
+    """(the plan itself, an optional aside about cross-cutting context), so
+    app_pages/creative_lab.py can show them as two scannable labeled blocks
+    instead of one paragraph that used to run the actual plan straight into
+    an unrelated tone-context aside. _strategist_summary (below) still
+    returns the joined single-string form, unchanged in type.
+    """
     if not families:
-        return "No creative opportunities clear the evidence bar for the current data."
+        return "No creative opportunities clear the evidence bar for the current data.", ""
 
     territories = "; ".join(
         f'"{family.opportunity.pain_point}" for {family.opportunity.product}' for family in families
     )
     n = len(families)
-    summary = (
-        f"Customer signals, current creative coverage, and campaign performance point to {n} creative "
-        f"opportunit{'y' if n == 1 else 'ies'} worth developing next: {territories}."
+    plan_line = (
+        f"{n} creative opportunit{'y' if n == 1 else 'ies'} worth developing next: {territories}. "
+        "In each case, it's something customers keep bringing up that our creative isn't addressing yet."
     )
+    aside = ""
     if cross_cutting:
         detail = cross_cutting.summary[0].lower() + cross_cutting.summary[1:]
-        summary += (
-            f" Separately, {detail} That pattern is carried into this plan as supporting context for tone, not "
-            "as a reason to add another creative opportunity."
+        aside = (
+            f"One more thing worth keeping in mind as we build these: {detail} That's supporting context for "
+            "tone, not a reason to add another opportunity."
         )
-    return summary
+    return plan_line, aside
+
+
+def _strategist_summary(families: list[CreativeFamily], cross_cutting: Finding | None) -> str:
+    plan_line, aside = _strategist_summary_parts(families, cross_cutting)
+    return f"{plan_line} {aside}".strip() if aside else plan_line
 
 
 def _evidence_strip(client_id: str) -> dict:
@@ -160,8 +194,10 @@ def build_creative_plan(client_id: str) -> CreativePlan:
         client_id=client_id,
         generated_at=datetime.now(timezone.utc).isoformat(),
         strategist_summary=_strategist_summary(families, cross_cutting),
+        strategist_summary_parts=_strategist_summary_parts(families, cross_cutting),
         families=families,
         cross_cutting_finding=cross_cutting,
         cross_cutting_context=cross_cutting_context_note(cross_cutting) if cross_cutting else None,
+        cross_cutting_context_parts=cross_cutting_context_parts(cross_cutting) if cross_cutting else None,
         evidence_strip=_evidence_strip(client_id),
     )

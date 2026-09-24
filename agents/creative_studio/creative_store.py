@@ -5,11 +5,15 @@ lives (assets/<client>/generated/, via core.assets.save_generated_asset): the
 image plus a JSON sidecar. This module owns only the READ side and the
 identity rules:
 
-- plan_fingerprint: a hash of the strategic fields a creative was built from
-  (pain point, product, funnel stage, angle, intent, learning question,
-  constants, reference creative). A saved creative is only ever shown for a
+- plan_fingerprint: a hash of the strategic FACTS a creative was built from
+  (pain point, product, funnel stage, avatar, learning question, constants,
+  reference creative, concept id). A saved creative is only ever shown for a
   concept whose fingerprint still matches, so a changed plan can never
-  present a stale ad as if it belonged to the new strategy.
+  present a stale ad as if it belonged to the new strategy. Milestone 31:
+  deliberately excludes a concept's own `angle`/`why_this_concept_exists`
+  PROSE - concept_id already uniquely identifies which of the 3 angles this
+  is, so refining how that angle is WORDED (a voice/copy pass, not a
+  strategy change) must never mark an already-generated creative stale.
 - creative_key: the fingerprint plus the text and image model ids. Asking for
   a creative whose key already exists on disk returns the saved one WITHOUT
   any provider call: this is the duplicate-call protection that survives
@@ -41,6 +45,14 @@ _IMAGE_EXTENSIONS = ("png", "jpeg", "jpg", "webp")
 
 
 def plan_fingerprint(opportunity: CreativeOpportunity, concept: CreativeConcept) -> str:
+    """A fingerprint of the STRATEGY a concept represents, not its wording.
+    concept_id already encodes which of the 3 angles this is (e.g.
+    "...::problem_recognition"), so `angle`/`why_this_concept_exists` -
+    prose that can be refined for voice/clarity without the underlying
+    strategy changing - are deliberately excluded; including them would
+    mark every already-generated creative stale on a copy-editing pass
+    alone.
+    """
     payload = {
         "pain_point": opportunity.pain_point,
         "product": opportunity.product,
@@ -51,8 +63,6 @@ def plan_fingerprint(opportunity: CreativeOpportunity, concept: CreativeConcept)
         "constants": list(opportunity.constants_to_preserve),
         "control": opportunity.control_creative_id,
         "concept_id": concept.concept_id,
-        "angle": concept.angle,
-        "intent": concept.why_this_concept_exists,
     }
     return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()[:16]
 

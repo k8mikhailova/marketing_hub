@@ -270,8 +270,8 @@ def _render_prepared_view(client_id: str, handoff: dict) -> None:
 
     ui.section_header("Ready to test")
     st.write(
-        "These concepts are designed to primarily compare messaging angle while keeping the product, audience, "
-        "funnel context, format, and CTA consistent."
+        "This test compares messaging angle head to head. Product, audience, funnel stage, format, and CTA "
+        "all stay the same."
     )
     st.button(
         "Run Demo Test", type="primary", key=f"run_demo_test_{handoff['proposal_id']}",
@@ -359,8 +359,8 @@ def _render_next_test(analysis: ConceptExperimentAnalysis) -> None:
         ui.badge_row(["Proposed learning", "Pending review"])
         ui.text_stack(
             analysis.learning_statement,
-            "This is a proposed learning, not an approved one: a human would need to review and approve it "
-            "before it durably informs future Creative Plans.",
+            "Still a proposed learning, not an approved one: a human needs to review and approve it before it "
+            "durably shapes future Creative Plans.",
         )
 
 

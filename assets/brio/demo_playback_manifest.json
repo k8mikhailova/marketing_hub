@@ -7,37 +7,37 @@
       "generated_id": "concept_opportunity_emerging_opportunity_taste_and_odor_problem_recognition_20260922T211001Z_9a493016",
       "proposal_id": "opportunity::emerging_opportunity::taste_and_odor",
       "version": 1,
-      "plan_fingerprint": "172be2c8234a4e07"
+      "plan_fingerprint": "bb7ad6f82fe899d5"
     },
     "concept::opportunity::emerging_opportunity::taste_and_odor::desired_outcome": {
       "generated_id": "concept_opportunity_emerging_opportunity_taste_and_odor_desired_outcome_20260922T211027Z_f025fc08",
       "proposal_id": "opportunity::emerging_opportunity::taste_and_odor",
       "version": 1,
-      "plan_fingerprint": "1eefe9a5cd43836d"
+      "plan_fingerprint": "448a8785444000ed"
     },
     "concept::opportunity::emerging_opportunity::taste_and_odor::proof_led": {
       "generated_id": "concept_opportunity_emerging_opportunity_taste_and_odor_proof_led_20260922T211050Z_3964677e",
       "proposal_id": "opportunity::emerging_opportunity::taste_and_odor",
       "version": 1,
-      "plan_fingerprint": "df7c02b953a9d41b"
+      "plan_fingerprint": "6e29e93b207922b0"
     },
     "concept::opportunity::messaging_gap::bottled_water_frustration::problem_recognition": {
       "generated_id": "concept_opportunity_messaging_gap_bottled_water_frustration_problem_recognition_20260922T211113Z_d2e28b3c",
       "proposal_id": "opportunity::messaging_gap::bottled_water_frustration",
       "version": 1,
-      "plan_fingerprint": "c2386941b1474339"
+      "plan_fingerprint": "47117ff1cddb77c2"
     },
     "concept::opportunity::messaging_gap::bottled_water_frustration::desired_outcome": {
       "generated_id": "concept_opportunity_messaging_gap_bottled_water_frustration_desired_outcome_20260922T211155Z_16d43f65",
       "proposal_id": "opportunity::messaging_gap::bottled_water_frustration",
       "version": 1,
-      "plan_fingerprint": "3a289dc32b57bc6d"
+      "plan_fingerprint": "4a81fe2ab0df1079"
     },
     "concept::opportunity::messaging_gap::bottled_water_frustration::proof_led": {
       "generated_id": "concept_opportunity_messaging_gap_bottled_water_frustration_proof_led_20260922T211217Z_acdf68fa",
       "proposal_id": "opportunity::messaging_gap::bottled_water_frustration",
       "version": 1,
-      "plan_fingerprint": "473b04d43fa95d0c"
+      "plan_fingerprint": "0c9d60b806ed6c40"
     }
   }
 }

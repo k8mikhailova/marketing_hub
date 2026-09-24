@@ -858,10 +858,12 @@ def _angle_problem_recognition(opportunity: CreativeOpportunity) -> dict:
     product = opportunity.product
     return {
         "name": "Problem recognition",
-        "angle": "Open with the customer's own problem, in their own language, before introducing the product.",
+        "angle": (
+            f"Start with the exact problem customers describe, {theme.lower()}, before we even mention the product."
+        ),
         "why_this_concept_exists": (
-            f'Customers are actively bringing up "{theme}" (see evidence): naming the problem directly tests '
-            f"whether recognition alone earns more attention than a benefit-led or proof-led open."
+            f'Customers are already bringing up "{theme}" unprompted. We want to know whether simply naming the '
+            "problem grabs more attention than leading with a benefit or our usual proof point."
         ),
         "headline": f"Still dealing with {theme.lower()}?",
         "primary_text": (
@@ -878,10 +880,10 @@ def _angle_desired_outcome(opportunity: CreativeOpportunity) -> dict:
     product = opportunity.product
     return {
         "name": "Desired outcome",
-        "angle": "Lead with the outcome the customer wants instead of the problem they have.",
+        "angle": "Skip the problem and go straight to the outcome customers actually want.",
         "why_this_concept_exists": (
-            f'Tests whether picturing life without "{theme}" motivates response more than naming the problem '
-            f"itself, a different hypothesis about what actually moves this audience."
+            f"We're testing whether picturing life without {theme.lower()} motivates people more than naming "
+            "the problem itself does, a different bet on what actually moves this audience."
         ),
         "headline": f"{product}: Built So {theme.title()} Isn't a Thing",
         "primary_text": (
@@ -901,10 +903,10 @@ def _angle_proof_led(opportunity: CreativeOpportunity, proof: str) -> dict:
     product = opportunity.product
     return {
         "name": "Proof-led",
-        "angle": "Lead with the existing approved product proof, connected explicitly to this pain point.",
+        "angle": "Lead with our existing proof point, tied directly to this specific pain point.",
         "why_this_concept_exists": (
-            "Tests whether a credibility-first open, anchored in the same approved proof already used today, "
-            f'converts better for "{theme}"-motivated customers than a purely emotional or problem-first open.'
+            "We're testing whether opening with credibility, the same approved proof we already use today, "
+            f'converts better for customers motivated by {theme.lower()} than an emotional or problem-first open.'
         ),
         "headline": f"{product}: The Proof Behind the {theme.title()} Difference",
         "primary_text": f"{proof} That's the difference customers notice most when {theme.lower()} was their reason to switch.",

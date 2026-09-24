@@ -366,17 +366,17 @@ def _evidence_strength_reason(evidence_strength: str, min_purchases: int) -> str
     plural = "" if min_purchases == 1 else "s"
     if evidence_strength == EVIDENCE_WEAK:
         return (
-            f"Purchase volume is still small ({min_purchases} purchase{plural}), so this is a promising "
-            "signal rather than a reliable learning."
+            f"We've only got {min_purchases} purchase{plural} so far, not enough to call this a reliable "
+            "learning yet, more of an early signal."
         )
     if evidence_strength == EVIDENCE_MODERATE:
         return (
-            f"Purchase volume is moderate ({min_purchases} purchase{plural}): this reads as a potential "
-            "pattern worth tracking, not yet a confirmed learning."
+            f"Purchase volume is moderate ({min_purchases} purchase{plural}), enough to call this a pattern "
+            "worth tracking, though not yet a confirmed learning."
         )
     return (
-        f"Purchase volume is the best available in this test ({min_purchases} purchase{plural}), though "
-        "still a directional pattern, not a statistically confirmed learning."
+        f"This is the best volume we've seen in this test ({min_purchases} purchase{plural}), but it's still "
+        "a directional pattern, not something statistically confirmed."
     )
 
 
@@ -976,52 +976,56 @@ def _concept_headline(assessment: str, strongest_arm: CreativeResult | None) -> 
     assumption that one arm wins.
     """
     if assessment == CONCEPT_ASSESSMENT_INSUFFICIENT_EVIDENCE:
-        return "The result is promising, but not settled."
+        return "Too early to call a direction yet."
     if assessment == CONCEPT_ASSESSMENT_NO_CLEAR_DIRECTION:
-        return "No clear direction emerged from this test."
+        return "No concept pulled ahead in this comparison."
     if assessment == CONCEPT_ASSESSMENT_MIXED:
-        return "Results were mixed across concepts in this test."
+        return "The concepts disagreed with each other in this comparison."
     name = strongest_arm.name if strongest_arm else "One concept"
-    return f"{name} showed the strongest response in this comparison."
+    return f"{name} is pulling ahead in this comparison."
 
 
 def _learning_statement(
     assessment: str, learning_question: str, strongest_arm: CreativeResult | None, strongest_ca: ConceptArmAnalysis | None
 ) -> str:
-    """The "what we learned" sentence, tied explicitly back to the ORIGINAL
-    learning question (this milestone's own central requirement), never a
-    generic "X won." Wording is deliberately careful: "directionally
-    stronger"/"may be worth developing further," never "proven"/"caused."
+    """The "what we learned" sentence: never a generic "X won," always
+    careful about how much the numbers actually support ("directionally
+    stronger"/"may be worth developing further," never "proven"/"caused").
+    Milestone 31: no longer re-embeds `learning_question` verbatim mid-
+    sentence (the old `.rstrip("?")` pattern produced a dangling, unpunctuated
+    clause) - the question is already shown directly above this, in the
+    results hero's own "What we tested" line, so restating it here just
+    duplicated it awkwardly. `learning_question` stays a parameter so this
+    function's signature and every caller are unchanged.
     """
     if assessment == CONCEPT_ASSESSMENT_INSUFFICIENT_EVIDENCE:
         return (
-            "There isn't enough purchase volume yet to say which framing is directionally stronger; treat this "
-            "as an early signal, not a learning."
+            "We haven't seen enough purchases yet to tell which framing is actually ahead, so this is an "
+            "early read, not a learning."
         )
     if assessment == CONCEPT_ASSESSMENT_NO_CLEAR_DIRECTION:
         return (
-            "None of the tested concepts separated from the others in this comparison, so this test does not "
-            "yet point toward a direction worth developing further."
+            "None of the tested concepts separated from the others here, so this test doesn't yet point "
+            "toward a direction worth developing further."
         )
     if assessment == CONCEPT_ASSESSMENT_MIXED:
         return (
-            "The tested concepts did not agree across metrics in this comparison (one measure favored one "
-            "concept, another measure favored a different one), so the result is not yet a clear direction."
+            "The tested concepts didn't agree across metrics here (one measure favored one concept, another "
+            "favored a different one), so we don't have a clear direction from this comparison yet."
         )
     roas_txt = f"{_format_pct(strongest_ca.roas_delta_pct)} ROAS" if strongest_ca and strongest_ca.roas_delta_pct is not None else "stronger ROAS"
     ctr_clause = f" and {_format_pct(strongest_ca.ctr_delta_pct)} CTR" if strongest_ca and strongest_ca.ctr_delta_pct is not None else ""
     name = strongest_arm.name if strongest_arm else "This concept"
-    question = learning_question.rstrip("?")
     return (
-        f"{name} produced {roas_txt}{ctr_clause} above the test average, giving directional evidence that this "
-        f"framing may be worth developing further to help answer: {question}."
+        f"{name} is running {roas_txt}{ctr_clause} above the test average, a good sign it may be worth "
+        "developing further."
     )
 
 
 def _limitations(evidence_strength: str) -> str:
-    base = "One synthetic test is not enough to generalize this across audiences, products, or formats."
+    base = "This is one synthetic test, so it wouldn't automatically apply to a different audience, product, or format."
     if evidence_strength == EVIDENCE_WEAK:
-        return base + " Purchase volume in this test is also small, so treat this as a signal, not a confirmed pattern."
+        return base + " Purchase volume here is also small, so treat this as an early signal, not a confirmed pattern."
     return base
 
 
@@ -1037,8 +1041,8 @@ def _recommended_next_test(assessment: str, strongest_arm: CreativeResult | None
             dimension=NEXT_TEST_DIMENSION_MESSAGING_ANGLE,
             label=NEXT_TEST_DIMENSION_LABELS[NEXT_TEST_DIMENSION_MESSAGING_ANGLE],
             rationale=(
-                "Purchase volume is too small to trust a direction yet. Running this same messaging-angle "
-                "comparison longer would help before changing anything else."
+                "Purchase volume is still too small to trust a direction. Let this same messaging-angle "
+                "comparison keep running before changing anything else."
             ),
         )
     if assessment == CONCEPT_ASSESSMENT_MIXED:
@@ -1046,8 +1050,8 @@ def _recommended_next_test(assessment: str, strongest_arm: CreativeResult | None
             dimension=NEXT_TEST_DIMENSION_MESSAGING_ANGLE,
             label=NEXT_TEST_DIMENSION_LABELS[NEXT_TEST_DIMENSION_MESSAGING_ANGLE],
             rationale=(
-                "Keep the opportunity, but test the messaging angles again with stronger separation or more "
-                "evidence before moving on to execution-level questions like hook or format."
+                "Keep the opportunity, but test the messaging angles again with more separation or more "
+                "evidence, before moving on to execution-level questions like hook or format."
             ),
         )
     if assessment == CONCEPT_ASSESSMENT_NO_CLEAR_DIRECTION:
@@ -1055,7 +1059,7 @@ def _recommended_next_test(assessment: str, strongest_arm: CreativeResult | None
             dimension=NEXT_TEST_DIMENSION_REVISIT_STRATEGY,
             label=NEXT_TEST_DIMENSION_LABELS[NEXT_TEST_DIMENSION_REVISIT_STRATEGY],
             rationale=(
-                "The angles tested here did not produce a strong direction. Revisit the creative strategy for "
+                "These angles didn't produce a clear direction. Worth revisiting the creative strategy for "
                 "this opportunity before investing in deeper iteration."
             ),
         )
@@ -1064,8 +1068,8 @@ def _recommended_next_test(assessment: str, strongest_arm: CreativeResult | None
         dimension=NEXT_TEST_DIMENSION_HOOK,
         label=NEXT_TEST_DIMENSION_LABELS[NEXT_TEST_DIMENSION_HOOK],
         rationale=(
-            f"Rather than testing the messaging angle again, keep {name}'s framing and audience context, and "
-            "test how that idea should be executed next, for example its hook, visual format, or proof treatment."
+            f"Rather than testing the messaging angle again, keep {name}'s framing and audience, and dig into "
+            "how we execute it, the hook, the visual, or how the proof is presented."
         ),
     )
 
