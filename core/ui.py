@@ -30,6 +30,29 @@ import streamlit.components.v1 as components
 # copy-pasted across overview.py/signals.py/intelligence.py/experiments.py.
 ACCENT_COLOR = "#2f6fed"
 
+# Milestone 30: one centralized typeface choice. Atlassian Sans (Jira's
+# actual product typeface) is distributed only through Atlassian's own
+# authenticated "Mosaic" platform for internal/product use - confirmed
+# before choosing anything: atlassian.design states app fonts are
+# available for download there, with no public license grant and no
+# public CDN, so it is not something this project can adopt. Inter (SIL
+# Open Font License 1.1, freely usable, served from Google Fonts) is the
+# openly-licensed alternative already widely used to approximate exactly
+# this clean, Atlassian-adjacent UI sans, and is the fallback this
+# project's own brief named first. Named ONCE, here: trying DM Sans or
+# another Google Fonts family later means changing FONT_PRIMARY_NAME and
+# the weights in FONT_GOOGLE_FONTS_URL and nothing else - no other file
+# in the app names a font.
+FONT_PRIMARY_NAME = "Inter"
+FONT_GOOGLE_FONTS_URL = "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+# Falls back to each OS's own native UI sans (never a generic serif/mono)
+# if the Google Fonts request fails for any reason - the interface stays
+# readable, just without Inter's specific letterforms.
+FONT_PRIMARY_STACK = (
+    f"'{FONT_PRIMARY_NAME}', -apple-system, BlinkMacSystemFont, 'Segoe UI', "
+    "Roboto, Helvetica, Arial, sans-serif"
+)
+
 MAX_CONTENT_WIDTH_PX = 1180
 
 # A small spacing scale (Part 4): reach for these instead of an ad hoc
@@ -41,6 +64,81 @@ SPACE_LG = "1.75rem"
 
 _BASE_CSS = f"""
 <style>
+/* Milestone 30 (Jira-inspired typography): @import must be the first rule
+   in a stylesheet or the browser ignores it - this has to stay the very
+   first thing in _BASE_CSS. `.streamlit/config.toml`'s [theme] table only
+   accepts the 3 generic families ("sans serif"/"serif"/"monospace") in
+   this Streamlit version (1.37); naming an actual font family and loading
+   it is only possible here. `--font-primary` is the ONE place the choice
+   is centralized: every rule below reads it rather than naming "Inter"
+   again, and `--gdg-font-family` repeats it under the specific CSS
+   variable name Streamlit's own dataframe grid (glide-data-grid) reads
+   for its canvas-rendered text (confirmed present in the installed
+   1.37.1 frontend bundle), so Insights' evidence tables pick it up too.
+   `html`/`body`/[data-testid="stApp"] are !important because Streamlit's
+   own theme already sets a font-family at comparable-or-higher
+   specificity; form controls (button/input/select/textarea) need their
+   own rule since browsers don't inherit font-family onto them by default,
+   regardless of what body sets. */
+@import url('{FONT_GOOGLE_FONTS_URL}');
+:root {{
+    --font-primary: {FONT_PRIMARY_STACK};
+    --gdg-font-family: var(--font-primary);
+}}
+html, body, [data-testid="stApp"] {{
+    font-family: var(--font-primary) !important;
+}}
+button, input, select, textarea {{
+    font-family: var(--font-primary) !important;
+}}
+/* Restrained heading hierarchy (Part 3 of this milestone): Streamlit had
+   no heading-size rule anywhere in this stylesheet before, so page
+   titles (st.title -> h1, including the sidebar's own title, the same
+   element) and st.subheader (h3) simply rendered at Streamlit's own
+   default size/weight. Sized down from that default and tightened
+   (line-height, a touch of negative tracking on the two largest levels)
+   for a calmer, "confident, not shouting" feel; h2 is included for
+   completeness even though no page currently uses st.header(). This is
+   the only place heading size/weight is set - individual pages never
+   override it.
+
+   Milestone 30.1 correction: st.title/st.header/st.subheader render
+   through Streamlit's dedicated Heading component, wrapped in
+   [data-testid="stHeading"] (confirmed in Heading.tsx, the 1.37.1
+   source) - but ui.section_header(level="subsection") does NOT call
+   st.subheader; it calls st.markdown(f"#### {{label}}") directly (see
+   below), which produces a plain <h4> inside [data-testid=
+   "stMarkdownContainer"], never stHeading. Every "####"-based subsection
+   header in this app - "What the Strategist found," "Creative
+   concepts," "Strategy-wide context," "Insights Brief"'s own
+   subsections, "Recent experiment learning" - was therefore invisible to
+   the rule above and still rendering at Streamlit's untouched default
+   (1.5rem bold Source Sans Pro from reboot.scss), even though the exact
+   same font/size/weight was already intended for it. Matching
+   [data-testid="stMarkdownContainer"] alongside stHeading fixes this:
+   grep confirms st.markdown("#### ...") is the ONLY markdown heading
+   syntax used anywhere in this app (no "###"/"##"/"#"), and the selector
+   only ever matches a literal h1-h4 TAG, never bold text (<strong>,
+   from "**word**"), a badge (a <div>/<span>), or a table - so ordinary
+   bold paragraph text and every other component are unaffected. */
+:is([data-testid="stHeading"], [data-testid="stMarkdownContainer"]) :is(h1, h2, h3, h4) {{
+    font-family: var(--font-primary);
+    font-weight: 700;
+    line-height: 1.25;
+}}
+:is([data-testid="stHeading"], [data-testid="stMarkdownContainer"]) h1 {{ font-size: 1.75rem; letter-spacing: -0.01em; }}
+:is([data-testid="stHeading"], [data-testid="stMarkdownContainer"]) h2 {{ font-size: 1.4rem; letter-spacing: -0.01em; }}
+:is([data-testid="stHeading"], [data-testid="stMarkdownContainer"]) h3 {{ font-size: 1.15rem; font-weight: 600; line-height: 1.3; }}
+:is([data-testid="stHeading"], [data-testid="stMarkdownContainer"]) h4 {{ font-size: 1rem; font-weight: 600; line-height: 1.35; }}
+/* Metric values (Overview's KPI row): tabular figures so digits align
+   column to column when the delta/value changes on a rerun, a genuine
+   readability win Inter supports natively; weight/size otherwise
+   unchanged from Streamlit's own default so the KPI row's proportions
+   (already tuned in an earlier milestone) don't shift. */
+[data-testid="stMetricValue"] {{
+    font-variant-numeric: tabular-nums;
+}}
+
 /* Part 4: one consistent max content width + page padding, instead of
    layout="wide" stretching every page edge-to-edge on a large monitor. */
 .block-container {{
@@ -261,9 +359,12 @@ div[data-testid="element-container"]:has(.ui-sidebar-current-marker) + div[data-
    theme's own primaryColor (.streamlit/config.toml); secondary gets a
    slightly firmer border than Streamlit's own default so it still reads
    as a real control next to the page-link buttons above, not just body
-   text with a click target. */
+   text with a click target. Milestone 30: medium weight (matching the
+   page-link nav rows above), not Streamlit's default regular weight, so
+   buttons read with the same "confident, restrained" hand as headings. */
 button[kind="primary"], button[kind="secondary"] {{
     border-radius: 6px !important;
+    font-weight: 500 !important;
 }}
 button[kind="secondary"] {{
     border-color: rgba(127, 127, 127, 0.35) !important;

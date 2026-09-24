@@ -5,8 +5,11 @@ incremental portfolio/demo project. This README is the source of truth for the
 project's intent, architecture, and rules. Read it before making any structural
 changes.
 
-**Current status: Milestone 29.2 (stable stylesheet + fixed sidebar
-structure across page navigation) complete**, on top of Milestone 29.1
+**Current status: Milestone 30.1 (markdown-heading typography fix) complete**,
+on top of Milestone 30 (Jira-inspired typography: Inter, centralized
+in `core/ui.py`), Milestone 29.2 (stable stylesheet + fixed sidebar
+in `core/ui.py`), Milestone 29.2 (stable stylesheet + fixed sidebar
+structure across page navigation), Milestone 29.1
 (sidebar active-page fix, all nav items real page_links), Milestone 29
 (post-demo UX/
 presentation polish pass), Milestone 28.9 (default-checked generated creatives)
@@ -3565,6 +3568,100 @@ committed spec beyond Milestone 1.
   "Ready to test" (prepared view) and "Results"/"Demo synthetic results"
   (results view) - once per experiment's own current state, never both at
   once for the same experiment. No hardcoded "30" anywhere in the UI.
+- **Milestone 30 (done): Jira-inspired typography (Inter). `core/ui.py`
+  only - no other file touched.** Typography-only experiment, not a
+  redesign: no card structure, color, page width, sidebar behavior,
+  chart, creative preview, generated ad, or experiment layout changed.
+  **Font choice:** Atlassian Sans (Jira's actual product typeface) was
+  checked first and ruled out - atlassian.design states its app fonts are
+  distributed only through Atlassian's own authenticated "Mosaic"
+  platform, with no public license grant and no public CDN. Inter (SIL
+  Open Font License 1.1, freely usable, served from Google Fonts) is the
+  requested fallback and the openly-licensed font already widely used to
+  approximate exactly this clean, Atlassian-adjacent UI sans.
+  **Loading/centralization:** `core/ui.py` names `FONT_PRIMARY_NAME`,
+  `FONT_GOOGLE_FONTS_URL` (Inter at weights 400/500/600/700,
+  `display=swap`) and `FONT_PRIMARY_STACK` (Inter, then each OS's own
+  native UI sans as fallback, never a generic serif/mono) in ONE place;
+  no other file names a font. `_BASE_CSS` loads it via `@import` (must be
+  the stylesheet's first rule) into a `--font-primary` CSS variable, and
+  applies it to `html`/`body`/`[data-testid="stApp"]` (`!important`, since
+  Streamlit's own theme already sets a font at comparable specificity) and
+  to `button`/`input`/`select`/`textarea` (form controls don't inherit
+  font-family from `body` by default in any browser). `--gdg-font-family`
+  reuses the SAME variable under the specific name Streamlit's own
+  dataframe grid (glide-data-grid, confirmed present in the installed
+  1.37.1 bundle) reads for its canvas-rendered text, so Insights' evidence
+  tables pick it up too - the one piece of this milestone that can't be
+  confirmed without a real browser, since canvas text isn't inspectable
+  the way DOM text is. Trying DM Sans or another Google Fonts family later
+  means changing `FONT_PRIMARY_NAME` and the weights in
+  `FONT_GOOGLE_FONTS_URL` and nothing else. `.streamlit/config.toml` still
+  only sets `primaryColor`: this Streamlit version's `[theme]` table
+  accepts only the three generic families ("sans serif"/"serif"/
+  "monospace"), not an actual font name, so centralizing there wasn't
+  possible.
+  **Hierarchy:** no heading-size rule existed anywhere before this
+  milestone - `st.title` (h1, including the sidebar's own title, the same
+  element), `st.subheader` (h3), and a markdown `"####"` subsection (h4,
+  confirmed wrapped in the same `[data-testid="stHeading"]` as the native
+  levels) all rendered at Streamlit's own default size/weight. Restrained
+  to h1 1.75rem/700, h2 1.4rem/700 (unused today, included for
+  completeness), h3 1.15rem/600, h4 1rem/600, tighter line-height
+  throughout, and a touch of negative letter-spacing on only the two
+  largest levels - confident, not shouting, per the brief. `st.metric`
+  values gained `font-variant-numeric: tabular-nums` (column-aligned
+  digits, a real readability win, no size/weight change to the already-
+  tuned KPI row). Buttons gained a medium (500) weight, matching the
+  existing sidebar/page-link rows, replacing Streamlit's default regular
+  weight. Deliberately NOT touched: the ~15 already-tuned component text
+  sizes across badges/field-grids/callouts/insight-blocks/evidence
+  tables/etc (0.72rem-1.3rem) from prior milestones - each already serves
+  one documented, deliberate role, and rewriting them was exactly the kind
+  of redesign this milestone was scoped to avoid; they now simply render
+  in Inter instead of Streamlit's default, via the same cascade as
+  everything else.
+  Verified: all five pages plus `app.py` render with no new exception and
+  carry the `@import`/`--font-primary` stylesheet; every value not
+  explicitly named above (accent color, max content width, card radius,
+  badge shape, sidebar page-link spacing, the Milestone 29 active-page
+  marker mechanism) is confirmed byte-identical to before. Not verified:
+  actual rendered appearance, whether Inter downloads successfully at
+  runtime, and the dataframe grid's canvas font - no browser available.
+- **Milestone 30.1 (done): markdown-rendered subsection headings weren't
+  getting the new typography at all. `core/ui.py` only.** Diagnosed after
+  the marketer reported the change looked "barely noticeable": confirmed
+  via Chrome DevTools that Inter itself loads correctly (not a loading
+  problem), then traced the remaining gap to Streamlit's own component
+  source (`Heading.tsx`, the 1.37.1 tag). `st.title`/`st.header`/
+  `st.subheader` render through a dedicated Heading component wrapped in
+  `[data-testid="stHeading"]` - Milestone 30's heading rule correctly
+  matched these. But `ui.section_header(level="subsection")` never calls
+  `st.subheader`; it calls `st.markdown(f"#### {label}")` directly,
+  which produces a plain `<h4>` inside `[data-testid=
+  "stMarkdownContainer"]` instead, invisible to the old selector - so
+  every "####"-based subsection heading ("What the Strategist found,"
+  "Creative concepts," "Strategy-wide context," "Recent experiment
+  learning") kept rendering at Streamlit's untouched default (1.5rem
+  bold, Source Sans Pro from `reboot.scss`), even though the exact same
+  restrained size/weight/font was already intended for it. Fix: the
+  heading selector now reads `:is([data-testid="stHeading"],
+  [data-testid="stMarkdownContainer"]) :is(h1, h2, h3, h4)` - same font
+  family/size/weight/line-height as before, just matching both render
+  paths. Grep-confirmed `st.markdown("#### ...")` is the only markdown
+  heading syntax used anywhere in the app (no "###"/"##"/"#"), and the
+  selector only ever matches a literal heading TAG, never bold text
+  (`<strong>`, from "**word**"), a badge (a `<div>`/`<span>`), or a table
+  - ordinary bold paragraph text and every other component are
+  unaffected. No font, size, color, card, layout, navigation, or wording
+  change beyond this. Verified against the live AppTest tree, not
+  assumed: "What the Strategist found" and "Creative concepts" really do
+  render as `st.markdown("#### ...")` (previously unmatched, now
+  covered); "Insights Brief," "Test setup," "What we learned," and "What
+  should we test next?" all turn out to already be real `st.subheader`
+  calls, so they were already covered before this fix and are unaffected
+  by it either way. Not verified: actual rendered appearance - no
+  browser available.
 - **Milestone 17D+ (not yet planned in detail):** Save Learning (turning
   the temporary human decision added in 17C/17C.1/17C.2 into a real,
   human-approved write to `approved_learnings.json`), Manager Agent, Ask
