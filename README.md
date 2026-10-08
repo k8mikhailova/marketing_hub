@@ -1,4 +1,4 @@
-# Softline Marketing Hub
+# Marketing Hub
 
 A prototype marketing tool that connects customer signals, creative
 testing, and experiment results into one workflow, built for a fictional
