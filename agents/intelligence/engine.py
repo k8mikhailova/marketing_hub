@@ -97,6 +97,14 @@ def _humanize(value: str) -> str:
     return value.replace("_", " ")
 
 
+# Plain-language funnel-stage labels for a Performance Pattern finding's own
+# prose (see _detect_performance_patterns) - display formatting only. The
+# raw TOF/MOF/BOF code stays the source of truth everywhere else (evidence
+# tables, recommended_next_step, every other page); this dict is never read
+# outside this one finding's title/summary/why_it_matters.
+_FUNNEL_STAGE_LABELS = {"TOF": "top-of-funnel", "MOF": "mid-funnel", "BOF": "bottom-of-funnel"}
+
+
 def _default_window(signals: pd.DataFrame) -> tuple[pd.Timestamp, pd.Timestamp]:
     """The latest 30 days of available signal history, the same default
     every page in this app uses, so a finding's numbers match what a
@@ -426,27 +434,33 @@ def _detect_performance_patterns(joined: pd.DataFrame, exclude_cells: set) -> li
             continue
 
         style_label = _humanize(leader["leader_style"])
-        runner_up_label = _humanize(leader["runner_up_style"])
+        stage_label = _FUNNEL_STAGE_LABELS.get(stage, stage)
         detail = "; ".join(
             f"{_humanize(r['message_style'])} {r['roas']:.2f}x ROAS, {r['ctr']:.2%} CTR, ${r['spend']:,.0f} spend"
             for _, r in leader["cell_table"].iterrows()
         )
 
+        # Milestone 35: plain, human-readable phrasing - "X is winning over Y"
+        # read as jargon to a non-technical marketer, and named a runner-up
+        # style nobody asked about. Every number below is unchanged from the
+        # prior wording (still message_style_leaders' own leader_roas/
+        # leader_ctr/rest_best_roas), just stated in plainer sentences; the
+        # runner-up style's own name (never shown here) is still available in
+        # the "View evidence" table below.
         findings.append(
             Finding(
                 finding_id=f"performance_pattern::{_slug(product)}::{_slug(stage)}",
                 type="Performance Pattern",
-                title=f"{style_label.capitalize()} messaging is winning over {runner_up_label} for {product}",
+                title=f"Ads using {style_label} are performing better for {product}",
                 summary=(
-                    f"{style_label.capitalize()} messaging is ahead for {product} {stage}: "
-                    f"{leader['leader_roas']:.2f}x ROAS and {leader['leader_ctr']:.2%} CTR, versus "
-                    f"{leader['rest_best_roas']:.2f}x ROAS for the next-best style."
+                    f"For {product} {stage_label} ads, {style_label} messaging produced a "
+                    f"{leader['leader_roas']:.2f}x ROAS and {leader['leader_ctr']:.2%} CTR, compared with "
+                    f"{leader['rest_best_roas']:.2f}x ROAS for the next-best messaging style."
                 ),
                 why_it_matters=(
-                    f"There's enough volume here to take the comparison seriously "
-                    f"(${leader['leader_spend']:,.0f} spend, {int(leader['leader_purchases'])} purchases), "
-                    f"though it's specific to {product} {stage}, not a sign that {style_label} messaging "
-                    f"wins everywhere."
+                    f"There's enough data to take this pattern seriously, but it's specific to {product} "
+                    f"{stage_label} ads. We shouldn't assume the same messaging will perform better for "
+                    f"every product or campaign."
                 ),
                 confidence="high" if leader["leader_spend"] >= PERFORMANCE_MIN_SPEND * 2 else "medium",
                 evidence=[

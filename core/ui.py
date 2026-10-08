@@ -128,8 +128,13 @@ button, input, select, textarea {{
 }}
 :is([data-testid="stHeading"], [data-testid="stMarkdownContainer"]) h1 {{ font-size: 1.75rem; letter-spacing: -0.01em; }}
 :is([data-testid="stHeading"], [data-testid="stMarkdownContainer"]) h2 {{ font-size: 1.4rem; letter-spacing: -0.01em; }}
-:is([data-testid="stHeading"], [data-testid="stMarkdownContainer"]) h3 {{ font-size: 1.15rem; font-weight: 600; line-height: 1.3; }}
-:is([data-testid="stHeading"], [data-testid="stMarkdownContainer"]) h4 {{ font-size: 1rem; font-weight: 600; line-height: 1.35; }}
+/* Presentation-polish pass: a major section heading (st.subheader/h3) read
+   a touch too light/small next to the page title above it and the body
+   copy below it - bumped size and weight slightly, still well below h1/h2,
+   so the hierarchy (page title > section title > card title > body >
+   label/caption) stays intact, just easier to scan at a glance. */
+:is([data-testid="stHeading"], [data-testid="stMarkdownContainer"]) h3 {{ font-size: 1.2rem; font-weight: 700; line-height: 1.3; }}
+:is([data-testid="stHeading"], [data-testid="stMarkdownContainer"]) h4 {{ font-size: 1.05rem; font-weight: 700; line-height: 1.35; }}
 /* Metric values (Overview's KPI row): tabular figures so digits align
    column to column when the delta/value changes on a rerun, a genuine
    readability win Inter supports natively; weight/size otherwise
@@ -137,6 +142,21 @@ button, input, select, textarea {{
    (already tuned in an earlier milestone) don't shift. */
 [data-testid="stMetricValue"] {{
     font-variant-numeric: tabular-nums;
+}}
+
+/* Presentation-polish pass: every st.divider() on every page is a plain
+   Markdown "---" inside [data-testid="stMarkdownContainer"], so it only
+   ever had Streamlit's own default hr margin - uneven next to the custom
+   margins this stylesheet already gives cards/headers, making some
+   dividers look attached to the section above or below instead of sitting
+   evenly between the two. One shared, symmetric margin fixes every
+   divider at once; no page-specific spacing hacks needed. Tightened again
+   in a third pass, 1.5rem to 1.25rem: a page dense with dividers back to
+   back (e.g. Experiments' prepared view) still read as too spread out;
+   still comfortably larger than any surrounding element's own margin, so
+   dividers stay clearly separated from the content around them. */
+[data-testid="stMarkdownContainer"] hr {{
+    margin: 1.25rem 0 !important;
 }}
 
 /* Part 4: one consistent max content width + page padding, instead of
@@ -225,7 +245,7 @@ details[data-testid="stExpander"] summary {{
     display: inline-block;
     padding: 4px 11px;
     border-radius: 999px;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     font-weight: 600;
     letter-spacing: 0.02em;
     line-height: 1.3;
@@ -400,18 +420,31 @@ button[kind="secondary"] {{
     gap: 1rem 1.5rem;
     align-items: start;
 }}
-.ui-field-groups {{ display: flex; flex-direction: column; gap: 1.25rem; padding-bottom: 1rem; }}
-.ui-field-group + .ui-field-group {{ border-top: 1px solid rgba(127, 127, 127, 0.16); padding-top: 1.25rem; }}
+/* Experiments visual-polish pass: tightened the gap between stacked field
+   groups (e.g. Test setup's Context / Test design / Keeping consistent)
+   from 1.25rem to 0.9rem - three groups back to back read as more spread
+   out than the rest of this compact card. */
+.ui-field-groups {{ display: flex; flex-direction: column; gap: 0.9rem; padding-bottom: 1rem; }}
+.ui-field-group + .ui-field-group {{ border-top: 1px solid rgba(127, 127, 127, 0.16); padding-top: 0.9rem; }}
+/* Experiments visual-polish pass: this all-caps group label (CONTEXT / TEST
+   DESIGN / KEEPING CONSISTENT) was genuinely too small to read comfortably
+   on screen during a presentation (0.72rem @ 55% opacity) - bumped both,
+   still clearly a quiet label relative to the field values below it. */
 .ui-field-group-title {{
-    font-size: 0.72rem; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase;
-    opacity: 0.55; margin-bottom: 0.65rem;
+    font-size: 0.8rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+    opacity: 0.62; margin-bottom: 0.65rem;
 }}
 .ui-field-group .ui-fields {{ padding-bottom: 0; }}
 .ui-field {{ min-width: 0; }}
 .ui-field-wide {{ grid-column: 1 / -1; }}
-.ui-field-label {{ font-size: 0.82rem; opacity: 0.65; margin-bottom: 0.15rem; }}
-.ui-field-value {{ font-size: 1rem; line-height: 1.45; overflow-wrap: anywhere; }}
-.ui-field-quiet .ui-field-value {{ font-size: 0.92rem; opacity: 0.85; }}
+/* Experiments visual-polish pass: field labels (Variable we're testing,
+   Product, Audience, Funnel stage, ...) bumped from 0.82rem/65% opacity for
+   the same readability reason; values stay clearly the stronger element via
+   a new font-weight rather than a larger size, so labels remain visually
+   secondary without being illegible. */
+.ui-field-label {{ font-size: 0.88rem; opacity: 0.7; margin-bottom: 0.15rem; }}
+.ui-field-value {{ font-size: 1rem; font-weight: 500; line-height: 1.45; overflow-wrap: anywhere; }}
+.ui-field-quiet .ui-field-value {{ font-size: 0.92rem; font-weight: 500; opacity: 0.85; }}
 /* Streamlit styles EVERY markdown <table> with an outer border, a 1px
    border-top on every <tr>, 1px borders on th/td, and a 1rem bottom margin
    (confirmed in the 1.37 bundle). Those are what drew a line ABOVE the
@@ -482,7 +515,13 @@ div[data-testid="element-container"]:has(.ui-rhythm-marker) {{ display: none; }}
 /* A primary line with an optional quieter line directly under it. */
 .ui-stack-primary {{ line-height: 1.55; }}
 .ui-stack-bold {{ font-weight: 600; }}
-.ui-stack-secondary {{ margin-top: 0.5rem; font-size: 0.875rem; line-height: 1.5; opacity: 0.7; }}
+/* Presentation-polish pass: this is the actual scannable body copy of a
+   finding card (the summary sentence under a title on Overview/Insights),
+   not metadata - it read as a faint caption at 0.875rem/70% opacity.
+   Bumped toward the ~16px body-copy target; still visually secondary to
+   the bold primary line above it via weight/opacity, just no longer hard
+   to read. */
+.ui-stack-secondary {{ margin-top: 0.5rem; font-size: 0.95rem; line-height: 1.5; opacity: 0.78; }}
 
 
 .ui-ad-field {{ padding-bottom: 1rem; }}

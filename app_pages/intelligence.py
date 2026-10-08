@@ -68,11 +68,7 @@ def _render_from_insight_to_creative() -> None:
     st.page_link) so the page renders identically inside the multi-page app
     or in isolation.
     """
-    ui.section_header(
-        "From insight to creative",
-        "The Creative Strategist combines these findings with customer signals, current creative coverage, "
-        "and performance context to build the next creative plan.",
-    )
+    ui.section_header("From insight to creative")
     if st.button("Build Creative Plan", type="primary", key="build_creative_plan"):
         st.switch_page("app_pages/creative_lab.py")
 
@@ -85,12 +81,15 @@ catalog = load_creative_catalog(client_id)
 joined = load_performance_with_creatives(client_id)
 
 ui.inject_base_styles()
-ui.page_header("Marketing Insights", "What is the market telling us?", badges=["Demo data"])
+# Presentation-polish pass: dropped the subtitle and the "Demo data" badge -
+# Overview already establishes this is demo data, and the page's own
+# content (Insights Brief right below) makes the subtitle's claim obvious.
+ui.page_header("Marketing Insights")
 
 # --- 1. Insights Brief: the page's main content, editorial not dashboard -----
 findings = generate_findings(client_id, max_findings=3)
 
-ui.section_header("Insights Brief", f"{len(findings)} opportunit{'y' if len(findings) == 1 else 'ies'} detected from customer + performance data")
+ui.section_header("Insights Brief", f"{len(findings)} opportunit{'y' if len(findings) == 1 else 'ies'} detected")
 
 if not findings:
     ui.empty_state("No findings clear the evidence bar for the current data.")
@@ -101,14 +100,13 @@ else:
 st.divider()
 
 # --- 2. Supporting analysis: secondary, never competing with the brief ------
-ui.section_header("Supporting analysis", "Evidence behind the findings above.")
+# Presentation-polish pass: dropped both subtitles here - "Supporting
+# analysis" and "Customer language vs. current marketing" are strong enough
+# headings on their own, and the chart/table right below each already show
+# what they mean.
+ui.section_header("Supporting analysis")
 
-ui.section_header(
-    "Customer language vs. current marketing",
-    "Each point is a customer theme: how much of the conversation it represents, and how often "
-    "current creative leads with it. Based on the full available signal history.",
-    level="subsection",
-)
+ui.section_header("Customer language vs. current marketing", level="subsection")
 
 products = sorted(catalog["product_name"].unique())
 selected_landscape_product = st.selectbox(
@@ -168,8 +166,7 @@ st.divider()
 # few loose widgets floating under the scatter chart above.
 ui.section_header(
     "Creative performance patterns",
-    "How different messaging approaches are performing, compared only within the same funnel stage "
-    "(a BOF and a TOF creative have different economics by design, so rows are never compared across stages).",
+    "Compare how different messaging styles perform within the same funnel stage.",
     level="subsection",
 )
 
@@ -231,10 +228,6 @@ with ui.card("standard"):
             display.style.apply(_highlight_leading_row, axis=1),
             hide_index=True,
             use_container_width=True,
-        )
-        ui.muted(
-            "Highlighted rows lead their funnel stage on both ROAS and CTR with enough volume to trust the "
-            'comparison. "Limited" sample rows are shown for completeness, not as a reliable pattern.'
         )
 
 # --- 3. From insight to creative: the single way forward, AFTER all evidence --

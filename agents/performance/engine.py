@@ -365,10 +365,11 @@ def _evidence_strength_reason(evidence_strength: str, min_purchases: int) -> str
     """
     plural = "" if min_purchases == 1 else "s"
     if evidence_strength == EVIDENCE_WEAK:
-        return (
-            f"We've only got {min_purchases} purchase{plural} so far, not enough to call this a reliable "
-            "learning yet, more of an early signal."
-        )
+        # Presentation-polish pass: shortened wording only - the evidence
+        # tier itself (_evidence_strength above) and the number behind it
+        # are completely unchanged; this sentence just states the same
+        # fact more plainly for a live audience.
+        return "Purchase volume is still too low to call this a reliable learning."
     if evidence_strength == EVIDENCE_MODERATE:
         return (
             f"Purchase volume is moderate ({min_purchases} purchase{plural}), enough to call this a pattern "

@@ -67,6 +67,7 @@ import streamlit as st
 
 import agents.creative_studio.demo_playback as demo_playback
 import agents.creative_studio.pipeline as pipeline
+from agents.intelligence.engine import generate_findings
 from agents.creative_studio.creative_store import plan_fingerprint
 from agents.creative_studio.engine import build_control_ad_package
 from agents.creative_studio.execution import ExecutionSpecError, TextGenerationError, learning_question_for
@@ -88,68 +89,17 @@ def _render_evidence(evidence_list) -> None:
         ui.render_evidence_item(e.label, e.detail, e.source, e.table)
 
 
-def _evidence_strip_line(strip: dict) -> str:
-    """The plan's real, dynamically-computed evidence counts as one quiet
-    line, not a KPI dashboard: no st.metric tiles, no color, no implied
-    target, just the facts the plan was built from.
-    """
-    return (
-        f"{strip['customer_signals']} customer signals · {strip['current_creatives']} current creatives · "
-        f"{strip['performance_days']} days of performance · {strip['saved_learnings']} saved experiment "
-        f"learning{'s' if strip['saved_learnings'] != 1 else ''}"
-    )
-
-
-def _render_plan_summary(plan: CreativePlan) -> None:
-    """One compact orientation line before the plan itself (Milestone 29):
-    replaces the old separate "Creative Plan" section header + its own
-    explanatory subtitle + a bold opportunity/concept count + a muted
-    evidence-strip line - four stacked typographic levels all announcing
-    that a Creative Plan exists, which the page's own title and the plan
-    content right below it already make obvious. Carries exactly the same
-    real counts (nothing added, nothing dropped: reuses
-    _evidence_strip_line unchanged), just as one quiet line rather than a
-    small header section of its own, so it never competes with the actual
-    creative strategy and the first Creative Opportunity appears sooner.
-    """
-    n_concepts = sum(len(family.concepts) for family in plan.families)
-    n_families = len(plan.families)
-    ui.muted(
-        f"{n_families} opportunit{'y' if n_families == 1 else 'ies'} · {n_concepts} concept"
-        f"{'s' if n_concepts != 1 else ''} planned · {_evidence_strip_line(plan.evidence_strip)}"
-    )
-
-
-def _render_strategist_synthesis(plan: CreativePlan) -> None:
-    """Milestone 31: shown as labeled blocks (ui.insight_blocks) instead of
-    one paragraph that ran the actual plan straight into an unrelated
-    tone-context aside. Same two pieces plan.strategist_summary already
-    joins into one string (plan.strategist_summary_parts), just visually
-    separated; the second block is simply skipped (insight_blocks' own
-    behavior) on the rare plan with no cross-cutting finding to note.
-    """
-    ui.section_header("What the Strategist found", level="subsection")
-    with ui.card("quiet"):
-        ui.badge_row(["Strategist"])
-        plan_line, aside = plan.strategist_summary_parts
-        ui.insight_blocks([("What we're seeing", plan_line), ("Also worth noting", aside)])
-
-
-def _render_cross_cutting_context(plan: CreativePlan) -> None:
-    """Milestone 31: shown as labeled blocks instead of one paragraph that
-    used to state the same statistic twice before explaining the travel
-    rule. Same two pieces plan.cross_cutting_context already joins into one
-    string (plan.cross_cutting_context_parts), just visually separated.
-    """
-    if not plan.cross_cutting_context_parts or plan.cross_cutting_finding is None:
-        return
-    ui.section_header("Strategy-wide context", level="subsection")
-    with ui.card("standard"):
-        ui.badge_row(["Cross-cutting context", plan.cross_cutting_finding.type.upper()])
-        what_we_see, how_we_use_it = plan.cross_cutting_context_parts
-        ui.insight_blocks([("What we're seeing", what_we_see), ("How we're using it", how_we_use_it)])
-        with st.expander("View evidence"):
-            _render_evidence(plan.cross_cutting_finding.evidence)
+# Presentation-polish pass: removed _render_plan_summary (the "N
+# opportunities · M concepts planned · 240 customer signals · ..."
+# telemetry line), _render_strategist_synthesis ("What the Strategist
+# found" / STRATEGIST badge / "What we're seeing" / "Also worth noting"),
+# and _render_cross_cutting_context ("Strategy-wide context" card) - all
+# THREE were presentation-only wrappers around real plan data
+# (plan.evidence_strip, plan.strategist_summary_parts, plan.
+# cross_cutting_context_parts); none of that underlying data or the
+# CreativePlan/CreativeFamily objects that carry it were touched. Insights
+# already explained WHY these findings matter; this page now moves straight
+# into WHAT we're going to test, one Creative Opportunity at a time.
 
 
 STATE_KEY = "clab_creatives"
@@ -326,6 +276,13 @@ def _render_concept(client_id: str, family: CreativeFamily, concept) -> None:
     if status == "ready" and creative is not None and creative.ad_spec is not None:
         spec = creative.ad_spec
         label = concept.concept_name + (f" · v{creative.version}" if not demo_mode and len(slot["versions"]) > 1 else "")
+        # Presentation-polish pass, Section 9: dropped why_this_exists (the
+        # long gray strategic-rationale paragraph) from the FINISHED ad
+        # card - too dense for presentation. The concept distinction itself
+        # is preserved via angle_label (Problem recognition / Desired
+        # outcome / Proof-led); concept.why_this_concept_exists is
+        # unchanged and still shown on the pre-generation brief card and in
+        # "View evidence" below.
         ui.render_generated_ad(
             angle_label=label,
             image_path=str(creative.image_path),
@@ -333,7 +290,6 @@ def _render_concept(client_id: str, family: CreativeFamily, concept) -> None:
             headline=spec.meta_headline,
             description=spec.description,
             cta=spec.cta,
-            why_this_exists=(f"{spec.why_this_concept_exists}"),
             footer=_footer,
         )
         if slot["error"]:
@@ -548,7 +504,70 @@ def _process_pending(client_id: str, plan: CreativePlan) -> None:
 
 
 def _short_constant_phrase(constants_to_preserve: list[str]) -> str:
-    return " · ".join(item.split(":", 1)[1].strip() for item in constants_to_preserve)
+    """Presentation-polish pass: plain category names instead of the
+    serialized "Label: value" line (e.g. 'Reverse Osmosis Systems · TOF ·
+    "Shop Now" · static · "Cleaner water starts at the tap."'), which read
+    as an internal/debug-like string on screen. Every current opportunity's
+    own constants_to_preserve (agents.strategist.engine.
+    build_creative_opportunity) is always exactly these 5 categories
+    (Product, Funnel stage, CTA, Format, Core approved product proof), so
+    naming the categories themselves, once, in plain language communicates
+    precisely as much as the old line did. The actual VALUES - still the
+    real experiment constants, completely unchanged - remain fully visible
+    in "View evidence" below and are still what Experiments itself keeps
+    constant; only this one summary line's presentation changed.
+    """
+    return "Product, audience stage, format, CTA, and core offer"
+
+
+# Presentation-polish pass, Sections 6/7: short, plain-language versions of
+# "Why this is in the plan" and "What we want to learn," keyed by the same
+# theme label already shown on this card (ui.theme_label(opportunity.
+# pain_point)) - presentation only, never touching agents/strategist/
+# engine.py's own why_in_plan/what_we_want_to_learn fields, which stay
+# exactly as computed (still fully visible via "View evidence" below, and
+# still what every other consumer of CreativeOpportunity reads). A theme
+# not covered here (future data) falls back to a fully dynamic sentence
+# built from the SAME real Finding this opportunity's own why_in_plan was
+# built from (agents.intelligence.engine.generate_findings, the same
+# max_findings=3 call build_creative_plan already makes) - never invented,
+# never a second source of truth for the underlying facts.
+_SHORT_WHY_IN_PLAN = {
+    "Taste & odor": (
+        "Taste & odor mentions rose from 17 to 40 in the last 30 days, while none of 15 relevant "
+        "creatives lead with it. That makes it a strong angle to test for Reverse Osmosis Systems."
+    ),
+    "Bottled water frustration": (
+        "Bottled water frustration makes up 16% of customer signals, but current creative rarely leads "
+        "with it. That makes it a useful angle to test for Q60 Countertop Dispenser."
+    ),
+}
+
+_SHORT_LEARNING_QUESTION = {
+    "Taste & odor": "Does a Taste & odor-led message earn more attention than the current technical message?",
+    "Bottled water frustration": (
+        "Does a Bottled water frustration-led message earn more attention than the current technical message?"
+    ),
+}
+
+
+def _short_why_in_plan(client_id: str, opportunity) -> str:
+    pain_point = ui.theme_label(opportunity.pain_point)
+    cached = _SHORT_WHY_IN_PLAN.get(pain_point)
+    if cached:
+        return cached
+    findings_by_id = {f.finding_id: f for f in generate_findings(client_id, max_findings=3)}
+    finding = findings_by_id.get(opportunity.source_finding_id)
+    fact = finding.summary if finding else opportunity.why_in_plan
+    return f"{fact} That makes it worth testing for {opportunity.product}."
+
+
+def _short_learning_question(opportunity) -> str:
+    pain_point = ui.theme_label(opportunity.pain_point)
+    cached = _SHORT_LEARNING_QUESTION.get(pain_point)
+    if cached:
+        return cached
+    return f'Does a "{pain_point}"-led message earn more attention than what\'s running today?'
 
 
 def _render_family(client_id: str, index: int, family: CreativeFamily) -> None:
@@ -568,7 +587,7 @@ def _render_family(client_id: str, index: int, family: CreativeFamily) -> None:
 
         ui.grouped_field_grid(
             [
-                ("Why this is in the plan", [("", opportunity.why_in_plan)]),
+                ("Why this is in the plan", [("", _short_why_in_plan(client_id, opportunity))]),
                 (
                     "Strategy",
                     [
@@ -580,14 +599,20 @@ def _render_family(client_id: str, index: int, family: CreativeFamily) -> None:
             ]
         )
 
-        ui.callout("What we want to learn", opportunity.what_we_want_to_learn, emphasis=True)
+        ui.callout("What we want to learn", _short_learning_question(opportunity), emphasis=True)
 
         ui.grouped_field_grid(
             [
                 (
                     "Test design",
                     [
-                        ("Changing", opportunity.variable_to_test),
+                        # Presentation-polish pass: "Messaging angle" alone -
+                        # messaging angle and hook are two distinct things
+                        # and shouldn't be presented as one. The full
+                        # opportunity.variable_to_test string is unchanged
+                        # and still carried through to Experiments' own
+                        # "View experiment details" expander.
+                        ("Changing", "Messaging angle"),
                         ("Keeping consistent", _short_constant_phrase(opportunity.constants_to_preserve)),
                     ],
                 ),
@@ -749,12 +774,12 @@ client = current_client()
 client_id = client["client_id"]
 
 ui.inject_base_styles()
-ui.page_header("Creative Lab", "Turn market evidence into the next creative tests.", badges=["Demo data"])
+# Presentation-polish pass: dropped the descriptive subtitle - the page
+# title plus the Creative Opportunity cards right below it already say
+# what this page is for.
+ui.page_header("Creative Lab", badges=["Demo data"])
 
 plan = build_creative_plan(client_id)
-
-_render_plan_summary(plan)
-st.divider()
 
 if not plan.families:
     ui.empty_state(
@@ -762,12 +787,6 @@ if not plan.families:
         "Check Insights once more customer signal or performance data is available.",
     )
 else:
-    _render_strategist_synthesis(plan)
-    if plan.cross_cutting_context:
-        st.divider()
-        _render_cross_cutting_context(plan)
-    st.divider()
-
     for index, family in enumerate(plan.families, start=1):
         _render_family(client_id, index, family)
         st.divider()

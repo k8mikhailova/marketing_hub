@@ -146,15 +146,6 @@ def _render_experiment_learning(handoff: dict, analysis) -> None:
 # experiment learnings follow it, in a separately labeled group.
 MAX_EXPERIMENT_LEARNINGS = 2
 
-def _attention_subtitle(has_experiments: bool) -> str:
-    """State-aware: never implies experiment evidence before an experiment
-    has actually been run in this session."""
-    areas = ["customer conversation", "creative coverage", "performance"]
-    if has_experiments:
-        areas.append("experiments")
-    return f"The most important things the system is seeing across {', '.join(areas[:-1])}, and {areas[-1]}."
-
-
 def _render_attention_section(client_id: str) -> None:
     """A short executive preview of what the system currently wants the
     marketer to know: the SAME Finding objects the Insights page renders
@@ -164,9 +155,14 @@ def _render_attention_section(client_id: str) -> None:
     order, plus any experiment learning finished this session. Each item is
     a summary, not a task: the only navigation is one quiet section-level
     link to the full Insights page.
+
+    Presentation-polish pass: dropped the generated subtitle ("The most
+    important things the system is seeing across...") - the heading plus
+    the cards right below it already say enough; the title alone reads
+    cleaner.
     """
     experiments = _completed_experiment_analyses(client_id)[:MAX_EXPERIMENT_LEARNINGS]
-    ui.section_header("What needs your attention", _attention_subtitle(bool(experiments)))
+    ui.section_header("What needs your attention")
 
     findings = _overview_order(generate_findings(client_id, max_findings=3))
 
@@ -195,7 +191,10 @@ ui.inject_base_styles()
 ui.page_header(f"{client['name']} | Marketing Overview", badges=["Demo data"])
 
 # --- Account performance: comes first, establishes context -------------------
-ui.section_header("Account performance", "How is marketing performing right now?")
+# Presentation-polish pass: dropped the subtitle ("How is marketing
+# performing right now?") - the heading plus the KPI row right below it
+# already say that.
+ui.section_header("Account performance")
 
 data_min = joined["date"].min().date()
 data_max = joined["date"].max().date()

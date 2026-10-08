@@ -135,7 +135,10 @@ client_id = client["client_id"]
 signals = load_customer_signals(client_id)
 
 ui.inject_base_styles()
-ui.page_header("Customer Signals", "Customer conversations and market signals across connected sources.", badges=["Demo data"])
+# Presentation-polish pass: dropped the subtitle and the "Demo data" badge -
+# the page title, filters, charts, and feed already make the page's purpose
+# and scope obvious.
+ui.page_header("Customer Signals")
 
 # --- Filters: one analysis, three controls (Part 2D) -------------------------
 data_min = signals["date"].min().date()

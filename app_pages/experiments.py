@@ -87,19 +87,6 @@ def _arm_letter(index: int) -> str:
     return _ARM_LETTERS[index] if index < len(_ARM_LETTERS) else str(index + 1)
 
 
-def _prepared_description(handoff: dict) -> str:
-    n = len(handoff["treatment_ad_package"]["selected_creative_versions"])
-    theme = handoff["customer_theme"].lower()
-    noun = "way" if n == 1 else "ways"
-    return f"We're testing {n} {noun} of framing the {theme} problem to learn which direction deserves further creative development."
-
-
-def _render_learning_question(handoff: dict) -> None:
-    ui.section_header("What we're trying to learn")
-    ui.safe_paragraph(handoff.get("learning_question") or handoff["hypothesis"])
-    ui.field_grid([("Hypothesis", handoff["hypothesis"])], wide_labels=("Hypothesis",), quiet=True)
-
-
 def _render_test_setup(handoff: dict) -> None:
     """A clean, compact section, deliberately not a technical configuration
     panel: just enough for a marketing leader to see WHY the comparison is
@@ -108,30 +95,37 @@ def _render_test_setup(handoff: dict) -> None:
     "Messaging angle" variable, the existing ROAS-primary/CTR-CPA-
     Purchases-secondary convention this app has used since Milestone 16.3);
     nothing here is recomputed or invented.
+
+    Visual-polish pass: no enclosing card/border anymore - a boxed card
+    nested inside the page's own larger experiment panel made the page feel
+    boxy. Rendered as a flat section instead: the section heading, then
+    grouped_field_grid's own existing subtle border between groups (Context
+    / Test design / Keeping consistent) stands in for the removed card
+    outline. Same values, same grouping, same underlying data - only the
+    enclosing container is gone.
     """
     ui.section_header("Test setup")
-    with ui.card("standard", rhythm=True):
-        ui.grouped_field_grid(
-            [
-                (
-                    "Context",
-                    [
-                        ("Product", handoff.get("product") or "Not specified"),
-                        ("Audience", handoff.get("avatar") or "Not specified"),
-                        ("Funnel stage", handoff.get("funnel_stage") or "Not specified"),
-                    ],
-                ),
-                (
-                    "Test design",
-                    [
-                        ("Variable we're testing", "Messaging angle"),
-                        ("Primary metric", "ROAS"),
-                        ("Supporting metrics", "CTR · CPA · Purchases"),
-                    ],
-                ),
-                ("Keeping consistent", [("", _KEEPING_CONSISTENT_LINE)]),
-            ]
-        )
+    ui.grouped_field_grid(
+        [
+            (
+                "Context",
+                [
+                    ("Product", handoff.get("product") or "Not specified"),
+                    ("Audience", handoff.get("avatar") or "Not specified"),
+                    ("Funnel stage", handoff.get("funnel_stage") or "Not specified"),
+                ],
+            ),
+            (
+                "Test design",
+                [
+                    ("Variable we're testing", "Messaging angle"),
+                    ("Primary metric", "ROAS"),
+                    ("Supporting metrics", "CTR · CPA · Purchases"),
+                ],
+            ),
+            ("Keeping consistent", [("", _KEEPING_CONSISTENT_LINE)]),
+        ]
+    )
 
 
 def _render_arm_card(index: int, arm: dict) -> None:
@@ -143,6 +137,11 @@ def _render_arm_card(index: int, arm: dict) -> None:
     """
     label = f"{_arm_letter(index)} · {arm['concept_name']}"
     if arm.get("image_path"):
+        # Presentation-polish pass: dropped why_this_exists (the strategic-
+        # rationale paragraph) from this finished-ad card, same as Creative
+        # Lab's own concept cards - the concept distinction stays via
+        # angle_label; the full rationale is unchanged and still shown in
+        # "View experiment details" below.
         ui.render_generated_ad(
             angle_label=label,
             image_path=arm["image_path"],
@@ -150,7 +149,6 @@ def _render_arm_card(index: int, arm: dict) -> None:
             headline=arm.get("meta_headline") or arm.get("on_image_headline", ""),
             description=arm.get("description", ""),
             cta=arm.get("cta") or arm.get("on_image_cta", ""),
-            why_this_exists=arm.get("why_this_concept_exists", ""),
         )
         return
     ui.render_creative_placeholder(
@@ -245,14 +243,22 @@ def _reset_demo_test(handoff: dict) -> None:
 
 
 def _render_prepared_view(client_id: str, handoff: dict) -> None:
-    ui.muted(ui.theme_label(handoff["customer_theme"]).upper())
-    st.title(f"{ui.theme_label(handoff['customer_theme'])} messaging test")
-    ui.badge_row(["Ready to test", f"Simulated test · {DEMO_TEST_DAYS} days"])
-    ui.safe_paragraph(_prepared_description(handoff))
-
-    st.divider()
-
-    _render_learning_question(handoff)
+    # Presentation-polish pass: dropped the small all-caps theme eyebrow
+    # above the title - the tab is already labeled with the same theme
+    # name, and the title itself ("<theme> messaging test") says it again;
+    # showing it a third time here was repetitive.
+    # Visual-polish pass: also dropped the "We're testing N ways of
+    # framing..." intro sentence and the whole "What we're trying to
+    # learn" section (title, question text, and its own divider) - the
+    # experiment title plus Test setup right below it already communicate
+    # what's being tested; the underlying learning_question/hypothesis
+    # data is untouched, just no longer rendered here. Title/badges stay
+    # wrapped in the same invisible "quiet" rhythm container (no border,
+    # no padding added - see ui.card's own docstring) purely to tighten
+    # the gap between them.
+    with ui.card("quiet", rhythm=True):
+        st.title(f"{ui.theme_label(handoff['customer_theme'])} messaging test")
+        ui.badge_row(["Ready to test", f"Simulated test · {DEMO_TEST_DAYS} days"])
 
     st.divider()
 
@@ -269,15 +275,15 @@ def _render_prepared_view(client_id: str, handoff: dict) -> None:
     st.divider()
 
     ui.section_header("Ready to test")
-    st.write(
-        "This test compares messaging angle head to head. Product, audience, funnel stage, format, and CTA "
-        "all stay the same."
-    )
+    # Presentation-polish pass: no longer restates Changing/Keeping
+    # consistent - Test setup above already states them once.
+    st.write("Run whenever you're ready - see Test setup above for exactly what's being compared.")
     st.button(
         "Run Demo Test", type="primary", key=f"run_demo_test_{handoff['proposal_id']}",
         on_click=_run_demo_test, args=(client_id, handoff),
     )
-    st.caption("Demo test uses deterministic synthetic performance data.")
+    # Presentation-polish pass: dropped - the "Simulated test · N days"
+    # badge above already says this; no need to repeat it in prose.
 
 
 def _render_results_hero(handoff: dict, analysis: ConceptExperimentAnalysis) -> None:
@@ -285,9 +291,16 @@ def _render_results_hero(handoff: dict, analysis: ConceptExperimentAnalysis) -> 
     the full Test Setup panel) and "what happened?" (the Performance
     Agent's own headline, evidence-tied, never "proven"/"winner").
     """
-    ui.badge_row(["Results", "Demo synthetic results", f"Simulated test · {DEMO_TEST_DAYS} days"])
-    st.title(f"{ui.theme_label(handoff['customer_theme'])} messaging test")
-    ui.supporting_text(f"What we tested: {analysis.learning_question}")
+    # Presentation-polish pass: dropped the "What we tested: ..." recap
+    # line - the title plus the headline/evidence right below it already
+    # communicate enough; the full learning question is still available on
+    # the prepared view and in "View experiment details."
+    # Visual-polish pass: badges + title wrapped in the same invisible
+    # "quiet" rhythm container _render_prepared_view uses, for the same
+    # tightened gap between them.
+    with ui.card("quiet", rhythm=True):
+        ui.badge_row(["Results", "Demo synthetic results", f"Simulated test · {DEMO_TEST_DAYS} days"])
+        st.title(f"{ui.theme_label(handoff['customer_theme'])} messaging test")
 
     with ui.card("primary", rhythm=True):
         st.subheader(analysis.headline)
@@ -344,24 +357,21 @@ def _render_learning(analysis: ConceptExperimentAnalysis) -> None:
 
 def _render_next_test(analysis: ConceptExperimentAnalysis) -> None:
     """"What should we test next": a recommended LEARNING QUESTION, never
-    an autonomous action and never "scale the winner." Also surfaces the
-    ProposedLearning as a clearly-labeled, pending-review, in-session-only
-    object: this is what a future Save Learning step would promote, not
-    something this page ever writes to approved_learnings.json itself.
+    an autonomous action and never "scale the winner."
+
+    Presentation-polish pass: dropped the "Proposed learning / Pending
+    review" quiet card that used to sit below the recommendation box - it
+    restated analysis.learning_statement a second time (already shown once
+    in "What we learned" above) plus a "not an approved one yet" caveat,
+    repeating the same conclusion the page had already made. The
+    ProposedLearning object itself is unchanged; this page still never
+    writes it to approved_learnings.json.
     """
     ui.section_header("What should we test next?")
     next_test = analysis.recommended_next_test
     with ui.card("primary", rhythm=True):
         ui.text_stack(next_test.label, bold_primary=True)
         ui.safe_paragraph(next_test.rationale)
-
-    with ui.card("quiet", rhythm=True):
-        ui.badge_row(["Proposed learning", "Pending review"])
-        ui.text_stack(
-            analysis.learning_statement,
-            "Still a proposed learning, not an approved one: a human needs to review and approve it before it "
-            "durably shapes future Creative Plans.",
-        )
 
 
 def _render_results_view(client_id: str, handoff: dict, result: ExperimentResult, analysis: ConceptExperimentAnalysis) -> None:
@@ -414,14 +424,14 @@ ui.inject_base_styles()
 ui.apply_pending_scroll_to_top()
 
 if not handoffs:
-    ui.page_header("Experiments", "Test creative ideas and turn the results into learnings.")
+    ui.page_header("Experiments")
     ui.empty_state("No experiment prepared yet.", "Review the Creative Plan in Creative Lab and prepare at least one experiment.")
     if st.button("Go to Creative Lab", type="primary"):
         st.switch_page("app_pages/creative_lab.py")
 else:
     ordered_ids = list(handoffs.keys())
     n = len(ordered_ids)
-    ui.page_header("Experiments", "Test creative ideas and turn the results into learnings.")
+    ui.page_header("Experiments")
     st.caption(f"{n} experiment{'s' if n != 1 else ''} ready")
 
     if n > 1:
