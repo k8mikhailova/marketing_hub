@@ -89,9 +89,10 @@ to actually test, whether a result is worth acting on.
   store wired up yet. A human reviewing and approving a learning so it
   carries into the next round is the natural next step, not something
   this version does.
-- There's no automated test suite in this version of the repo. There has
-  been at earlier points in development; it's not something I'm claiming
-  is here right now.
+- There's no comprehensive automated test suite in this version of the
+  repo (there has been at earlier points in development). `tests/` holds
+  one narrow regression test for a Streamlit-version compatibility bug
+  found after deploying this demo publicly, not general coverage.
 
 ## What I built
 

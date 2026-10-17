@@ -664,6 +664,12 @@ def card(level: str = "standard", height: int | None = None, rhythm: bool = Fals
     then pins the card's last element to the bottom rather than leaving a
     gap. Usage: `with ui.card("primary"): ...` exactly like `st.container`.
 
+    height=None is NOT passed through to st.container: newer Streamlit
+    (1.4x+) raises StreamlitInvalidHeightError on an explicit None (it
+    wants the keyword omitted, or "content"/"stretch"/an int), while older
+    Streamlit only ever accepted int | None. Omitting the kwarg entirely
+    when no fixed height is wanted is the one spelling that works on both.
+
     `rhythm=True` (opt-in, so cards on pages that already look right are
     untouched) applies the shared vertical-rhythm rules in _BASE_CSS: equal
     top/bottom/side padding, one uniform gap between the card's elements,
@@ -675,20 +681,21 @@ def card(level: str = "standard", height: int | None = None, rhythm: bool = Fals
     `soft=True` (bordered rhythm cards only) adds a very quiet background
     tint, for compact summary cards stacked on a page.
     """
+    container_kwargs: dict = {} if height is None else {"height": height}
     if level == "quiet":
-        with st.container(border=False, height=height):
+        with st.container(border=False, **container_kwargs):
             if rhythm:
                 st.markdown('<div class="ui-rhythm-marker"></div>', unsafe_allow_html=True)
             yield
     elif level == "primary":
-        with st.container(border=True, height=height):
+        with st.container(border=True, **container_kwargs):
             if rhythm:
                 st.markdown('<div class="ui-rhythm-marker ui-rhythm-pad ui-rhythm-accent"></div>', unsafe_allow_html=True)
             else:
                 st.markdown('<div class="ui-card-accent"></div>', unsafe_allow_html=True)
             yield
     else:
-        with st.container(border=True, height=height):
+        with st.container(border=True, **container_kwargs):
             if rhythm:
                 soft_cls = " ui-rhythm-soft" if soft else ""
                 st.markdown(f'<div class="ui-rhythm-marker ui-rhythm-pad{soft_cls}"></div>', unsafe_allow_html=True)
@@ -950,7 +957,7 @@ def render_generated_ad(
     with card("standard"):
         badge_row([angle_label.upper()])
         if image_path and Path(image_path).is_file():
-            st.image(str(image_path), use_column_width=True)
+            st.image(str(image_path), use_container_width=True)
         else:
             st.markdown(
                 '<div style="border: 1px dashed rgba(127, 127, 127, 0.35); border-radius: 8px; padding: 1.4rem 1rem; '
