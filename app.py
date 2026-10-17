@@ -1,4 +1,4 @@
-"""Softline Marketing Hub: Streamlit entry point.
+"""Marketing Intelligence Hub: Streamlit entry point.
 
 This file owns global app chrome (page config + sidebar) and declares
 navigation. All shared behavior lives in core/shell.py so there is exactly
@@ -55,7 +55,7 @@ from core.shell import render_sidebar
 load_dotenv()
 
 st.set_page_config(
-    page_title="Softline Marketing Hub",
+    page_title="Marketing Intelligence Hub",
     page_icon="📊",
     layout="wide",
 )
