@@ -1,6 +1,6 @@
 # Build log
 
-This is the full, unedited engineering log I kept while building Softline
+This is the full, unedited engineering log I kept while building this
 Marketing Hub, every milestone, in order, with what changed and why. It's
 the working doc I used to pick up work session to session, not something
 written for an outside reader.
@@ -12,7 +12,7 @@ decision.
 
 ---
 
-# Softline Marketing Hub
+# Marketing Hub
 
 A multi-client AI marketing intelligence and experimentation workspace, built as an
 incremental portfolio/demo project. This README is the source of truth for the
@@ -149,7 +149,7 @@ agent is still a deterministic preview. See
 
 ## 1. What this is
 
-Softline Marketing Hub demonstrates how AI can help a marketing team learn the
+Marketing Hub demonstrates how AI can help a marketing team learn the
 market faster, understand customers earlier, test more ideas, and make
 better-informed decisions: **without replacing the marketer**.
 
@@ -193,7 +193,7 @@ auto-promotes its own output into permanent memory or into a live experiment.
 
 ## 2. Multi-client design
 
-Softline works with multiple client companies. The app is **not** built as a
+This is built to work with multiple client companies. The app is **not** built as a
 Brio-only tool: it has a client selector, and everything client-specific
 (knowledge, products, signals, campaign data, experiment history, creative
 assets, approved learnings) is scoped by `client_id`.
