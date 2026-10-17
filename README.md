@@ -1,4 +1,4 @@
-# Marketing Hub
+# Marketing Intelligence Hub
 
 A prototype marketing tool that connects customer signals, creative
 testing, and experiment results into one workflow, built for a fictional
@@ -89,9 +89,11 @@ to actually test, whether a result is worth acting on.
   store wired up yet. A human reviewing and approving a learning so it
   carries into the next round is the natural next step, not something
   this version does.
-- There's no automated test suite in this version of the repo. There has
-  been at earlier points in development; it's not something I'm claiming
-  is here right now.
+- There's no comprehensive automated test suite in this version of the
+  repo (there has been at earlier points in development). `tests/` holds
+  a handful of narrow checks added for the public-demo deployment (every
+  page renders, the demo-mode "Generate creatives" path never makes a
+  live API call), not general coverage.
 
 ## What I built
 

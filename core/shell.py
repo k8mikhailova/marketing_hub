@@ -69,7 +69,12 @@ def render_sidebar(pages: list, current_title: str | None = None) -> None:
     core/ui.py), so this changes nothing about spacing, only which single
     marker's class flips the CSS selector below it.
     """
-    st.sidebar.title("Marketing Hub")
+    st.sidebar.title("Marketing Intelligence Hub")
+    st.sidebar.caption(
+        "Personal portfolio project. Simulated customer, ad performance, "
+        "and experiment data for a fictional brand, not an official Brio "
+        "Water or Softline application."
+    )
 
     active_clients = get_active_clients()
     client_ids = [c["client_id"] for c in active_clients]
