@@ -90,9 +90,9 @@ to actually test, whether a result is worth acting on.
   carries into the next round is the natural next step, not something
   this version does.
 - There's no comprehensive automated test suite in this version of the
-  repo (there has been at earlier points in development). `tests/` holds
-  one narrow regression test for a Streamlit-version compatibility bug
-  found after deploying this demo publicly, not general coverage.
+  repo (there has been at earlier points in development). `tests/` holds a
+  handful of narrow regression tests for Streamlit-version compatibility
+  bugs found after deploying this demo publicly, not general coverage.
 
 ## What I built
 

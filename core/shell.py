@@ -68,34 +68,51 @@ def render_sidebar(pages: list, current_title: str | None = None) -> None:
     both marker classes are equally invisible (zero-size, :has()-hidden in
     core/ui.py), so this changes nothing about spacing, only which single
     marker's class flips the CSS selector below it.
+
+    Public-demo deployment pass (pinned to Streamlit 1.66.0): everything
+    down to the nav list is wrapped in one st.sidebar.container(gap=
+    "xxsmall") - the "gap" parameter on container() didn't exist in 1.37.1
+    (the version this was originally built against); its absence is a
+    real part of why the deployed sidebar read as far more spread out than
+    the version developed locally, not just a matter of taste. Each nav
+    item is also its own gap=0 sub-container (marker + page_link together),
+    so the outer gap applies exactly once per item rather than once before
+    the invisible marker AND again before the link it precedes. The public-
+    demo disclaimer moved out of this tight header block entirely, into its
+    own "About this demo" expander below the nav list, so it no longer
+    competes with the title/selector/nav for visual weight.
     """
-    st.sidebar.title("Marketing Intelligence Hub")
-    st.sidebar.caption(
-        "Personal portfolio project. Simulated customer, ad performance, and "
-        "experiment data for a fictional brand, not an official Brio Water or "
-        "Softline application."
-    )
+    with st.sidebar.container(gap="xxsmall"):
+        st.title("Marketing Intelligence Hub")
 
-    active_clients = get_active_clients()
-    client_ids = [c["client_id"] for c in active_clients]
-    client_names = {c["client_id"]: c["name"] for c in active_clients}
+        active_clients = get_active_clients()
+        client_ids = [c["client_id"] for c in active_clients]
+        client_names = {c["client_id"]: c["name"] for c in active_clients}
 
-    if CLIENT_STATE_KEY not in st.session_state:
-        st.session_state[CLIENT_STATE_KEY] = default_client_id()
+        if CLIENT_STATE_KEY not in st.session_state:
+            st.session_state[CLIENT_STATE_KEY] = default_client_id()
 
-    st.sidebar.selectbox(
-        "Client",
-        options=client_ids,
-        format_func=lambda cid: client_names[cid],
-        key=CLIENT_STATE_KEY,
-    )
+        st.selectbox(
+            "Client",
+            options=client_ids,
+            format_func=lambda cid: client_names[cid],
+            key=CLIENT_STATE_KEY,
+        )
 
-    st.sidebar.divider()
-    for page in pages:
-        is_current = current_title is not None and page.title == current_title
-        marker_class = "ui-sidebar-current-marker" if is_current else "ui-sidebar-marker"
-        st.sidebar.markdown(f'<div class="{marker_class}"></div>', unsafe_allow_html=True)
-        st.sidebar.page_link(page)
+        st.divider()
+        for page in pages:
+            is_current = current_title is not None and page.title == current_title
+            marker_class = "ui-sidebar-current-marker" if is_current else "ui-sidebar-marker"
+            with st.container(gap=0):
+                st.markdown(f'<div class="{marker_class}"></div>', unsafe_allow_html=True)
+                st.page_link(page)
+
+    with st.sidebar.expander("About this demo"):
+        st.caption(
+            "Personal portfolio project. Simulated customer, ad performance, "
+            "and experiment data for a fictional brand, not an official Brio "
+            "Water or Softline application."
+        )
 
 
 def current_client() -> dict:

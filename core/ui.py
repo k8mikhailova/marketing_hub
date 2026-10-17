@@ -167,59 +167,49 @@ button, input, select, textarea {{
     padding-bottom: 3rem;
 }}
 
-/* Part 5/9: softened, consistent corners on every bordered container and
-   expander, instead of Streamlit's sharper default, so cards/expanders
-   read as one visual family. */
-div[data-testid="stVerticalBlockBorderWrapper"] {{
-    border-radius: 10px;
+/* Part 5/9, rewritten for Streamlit 1.6x: the separate
+   stVerticalBlockBorderWrapper div these rules used to key off no longer
+   exists (confirmed against the 1.66.0 frontend bundle) - a bordered
+   container's border/padding now render directly on the same div its
+   content lives in, which Streamlit gives no stable outside name for. Every
+   rule below keys off ui.card()'s own .ui-card-marker instead (the card's
+   own first child, by construction, so :has(> .ui-card-marker) always
+   means "the card's own div", never a Streamlit-internal name that can be
+   renamed again on the next upgrade).
+
+   Corners, a card's own height/flex (so a fixed `height=` or a stretched
+   row can actually fill it), and pinning a card's last element to the
+   bottom instead of wherever its content happens to end (a no-op for a
+   card with no fixed/stretched height). */
+.ui-card-marker {{
+    display: none;
 }}
-/* A card given a fixed height (a row of cards that should align) pins its
-   last element to the bottom instead of leaving it wherever content
-   happens to end; a no-op for any card with no fixed height. Replaces the
-   identical CSS block that used to be copy-pasted in overview.py and
-   intelligence.py separately. */
-div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stVerticalBlock"] {{
+div:has(> .ui-card-marker) {{
+    border-radius: 10px;
     height: 100%;
     display: flex;
     flex-direction: column;
 }}
-/* Pinned to the bottom ONLY for a card's own content, never for the content
-   of a COLUMN. Streamlit renders EVERY vertical block, a column's included,
-   as stVerticalBlockBorderWrapper > div > stVerticalBlock (confirmed in the
-   1.37 bundle: the block renderer wraps all vertical blocks), so a column's
-   content block is column > wrapper > div > stVerticalBlock, not a direct
-   child of the column. The Milestone 24 exclusion used a direct-child
-   selector and therefore never matched: in a row like Avatar / Awareness
-   stage / Pain point, the row stretched every column to the tallest value's
-   height and this rule then pushed each shorter column's last child (its
-   value) to the BOTTOM, far below its own label. */
-div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stVerticalBlock"]:not([data-testid="column"] > div[data-testid="stVerticalBlockBorderWrapper"] > div > div[data-testid="stVerticalBlock"]) > *:last-child {{
+div:has(> .ui-card-marker) > *:last-child {{
     margin-top: auto;
 }}
-/* Milestone 22 UX correction: equal-height card ROWS (e.g. Creative Lab's
-   3-concept comparison row, Experiments' creative gallery), not just a
-   card given an explicit fixed height. Real DOM (1.37 bundle):
-   stHorizontalBlock > column > stVerticalBlockBorderWrapper > div >
-   stVerticalBlock > [card: stVerticalBlockBorderWrapper > div >
-   stVerticalBlock]. Streamlit's own styles already make the wrapper's inner
-   div and stVerticalBlock flex:1 columns; what was missing is the row
-   stretching each column and each wrapper (the column's own, and a card
-   inside it) to the row's tallest natural-height sibling, so no pixel
-   number is ever hardcoded and longer copy simply makes every card in that
-   row taller together. A plain, card-less column (a KPI row) is unaffected
-   in appearance: its content stays top-aligned because the pin rule above
-   excludes column content. */
+/* Milestone 22 UX correction, same rewrite: equal-height card ROWS (e.g.
+   Creative Lab's 3-concept comparison row, Experiments' creative gallery),
+   not just a card given an explicit fixed height. stHorizontalBlock and
+   stColumn (renamed from the old bare "column" testid, also confirmed
+   against the 1.66.0 bundle) are still Streamlit's own stable names, so
+   those two keep using them; only "which column holds a card" needs our
+   own marker; a plain, card-less column (a KPI row) is unaffected since the
+   flex:1 rule only applies where .ui-card-marker is actually present. */
 div[data-testid="stHorizontalBlock"] {{
     align-items: stretch;
 }}
-div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {{
+div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"] {{
     display: flex;
     flex-direction: column;
 }}
-div[data-testid="stHorizontalBlock"] > div[data-testid="column"] div[data-testid="stVerticalBlockBorderWrapper"] {{
+div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:has(.ui-card-marker) {{
     flex: 1;
-    display: flex;
-    flex-direction: column;
 }}
 details[data-testid="stExpander"] {{
     border: 1px solid rgba(127, 127, 127, 0.18) !important;
@@ -260,13 +250,19 @@ details[data-testid="stExpander"] summary {{
 }}
 
 /* Part 5: the ONE primary-card accent, a thin top strip, used sparingly
-   (the single most important card on a page), never per-row. */
+   (the single most important card on a page), never per-row. Inset rather
+   than bleeding to the card's edge: the negative margin this used to cancel
+   assumed a specific container padding value from the 1.37 bundle, which
+   Streamlit 1.6x's own theme-driven padding (now applied directly on the
+   card's own div, not a separate wrapper) no longer guarantees - an inset
+   strip costs a few px of edge-to-edge bleed but can't drift out of place
+   again the next time Streamlit's own default padding changes. */
 .ui-card-accent {{
     height: 3px;
     border-radius: 2px;
     background: {ACCENT_COLOR};
     opacity: 0.85;
-    margin: -0.9rem -0.9rem 0.75rem -0.9rem;
+    margin: 0 0 0.75rem 0;
 }}
 
 /* Part 12: workflow/progress indicator. */
@@ -357,14 +353,21 @@ details[data-testid="stExpander"] summary {{
    still gave the preserved sidebar subtree a different shape run to run,
    which is exactly what forces a positional re-render instead of an
    in-place patch; a fixed slot per link removes that variable. */
+/* Streamlit 1.6x also renamed the element-container testid to
+   stElementContainer (confirmed against the 1.66.0 bundle; the old name
+   survives only as a plain CSS class, not the actual data-testid attribute
+   these selectors read) and separately started giving the current page's
+   own st.page_link a subtle native highlight of its own - neither changes
+   what this marker system is for (OUR accent border/background on the
+   correct nav item), so it's kept, just re-pointed at the current name. */
 .ui-sidebar-marker, .ui-sidebar-current-marker {{
     display: none;
 }}
-div[data-testid="element-container"]:has(.ui-sidebar-marker),
-div[data-testid="element-container"]:has(.ui-sidebar-current-marker) {{
+div[data-testid="stElementContainer"]:has(.ui-sidebar-marker),
+div[data-testid="stElementContainer"]:has(.ui-sidebar-current-marker) {{
     display: none;
 }}
-div[data-testid="element-container"]:has(.ui-sidebar-current-marker) + div[data-testid="element-container"] [data-testid="stPageLink-NavLink"] {{
+div[data-testid="stElementContainer"]:has(.ui-sidebar-current-marker) + div[data-testid="stElementContainer"] [data-testid="stPageLink-NavLink"] {{
     background: color-mix(in srgb, {ACCENT_COLOR} 16%, transparent) !important;
     border-color: color-mix(in srgb, {ACCENT_COLOR} 40%, transparent) !important;
     border-left: 3px solid {ACCENT_COLOR} !important;
@@ -381,12 +384,19 @@ div[data-testid="element-container"]:has(.ui-sidebar-current-marker) + div[data-
    as a real control next to the page-link buttons above, not just body
    text with a click target. Milestone 30: medium weight (matching the
    page-link nav rows above), not Streamlit's default regular weight, so
-   buttons read with the same "confident, restrained" hand as headings. */
-button[kind="primary"], button[kind="secondary"] {{
+   buttons read with the same "confident, restrained" hand as headings.
+
+   Streamlit 1.6x no longer forwards `kind` as a plain HTML attribute onto
+   the real <button> (confirmed against the 1.66.0 bundle: it's consumed by
+   the styled component for its own CSS and filtered out before reaching
+   the DOM), so an attribute selector keyed on that prop silently stopped
+   matching anything; data-testid="stBaseButton-primary"/"-secondary" is
+   Streamlit's own current, intentional hook for exactly this. */
+[data-testid="stBaseButton-primary"], [data-testid="stBaseButton-secondary"] {{
     border-radius: 6px !important;
     font-weight: 500 !important;
 }}
-button[kind="secondary"] {{
+[data-testid="stBaseButton-secondary"] {{
     border-color: rgba(127, 127, 127, 0.35) !important;
 }}
 
@@ -478,34 +488,39 @@ button[kind="secondary"] {{
    and ONE gap (0.75rem, the vertical block's own flex gap) separates
    elements; padding is equal on all sides. Headings lose their built-in
    padding for the same reason. */
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.ui-rhythm-marker) div[data-testid="stVerticalBlock"] {{
+   Rewritten for Streamlit 1.6x: same reasoning as the structural card CSS
+   above - stVerticalBlockBorderWrapper is gone, border/padding now apply
+   directly to the card's own div, so there's no separate wrapper-then-
+   stVerticalBlock nesting to descend into either; the card's own div IS
+   the one with .ui-rhythm-marker as a direct child. */
+div:has(> .ui-rhythm-marker) {{
     gap: 0.75rem;
 }}
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.ui-rhythm-marker) [data-testid="stMarkdownContainer"],
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.ui-rhythm-marker) [data-testid="stCaptionContainer"] {{
+div:has(> .ui-rhythm-marker) [data-testid="stMarkdownContainer"],
+div:has(> .ui-rhythm-marker) [data-testid="stCaptionContainer"] {{
     margin-bottom: 0 !important;
 }}
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.ui-rhythm-marker) [data-testid="stMarkdownContainer"] p,
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.ui-rhythm-marker) [data-testid="stCaptionContainer"] p {{
+div:has(> .ui-rhythm-marker) [data-testid="stMarkdownContainer"] p,
+div:has(> .ui-rhythm-marker) [data-testid="stCaptionContainer"] p {{
     margin: 0 !important;
 }}
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.ui-rhythm-marker) [data-testid="stHeading"] :is(h1, h2, h3, h4) {{
+div:has(> .ui-rhythm-marker) [data-testid="stHeading"] :is(h1, h2, h3, h4) {{
     padding: 0 !important;
     margin: 0 !important;
 }}
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.ui-rhythm-marker) :is(.ui-fields, .ui-table-wrap, .ui-field-groups, .ui-callout-wrap) {{
+div:has(> .ui-rhythm-marker) :is(.ui-fields, .ui-table-wrap, .ui-field-groups, .ui-callout-wrap) {{
     padding-bottom: 0;
 }}
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.ui-rhythm-pad) {{
+div:has(> .ui-rhythm-pad) {{
     padding: 1.15rem 1.25rem !important;
 }}
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.ui-rhythm-accent) {{
+div:has(> .ui-rhythm-accent) {{
     border-top: 3px solid {ACCENT_COLOR} !important;
 }}
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.ui-rhythm-soft) {{
+div:has(> .ui-rhythm-soft) {{
     background: rgba(127, 127, 127, 0.045);
 }}
-div[data-testid="element-container"]:has(.ui-rhythm-marker) {{ display: none; }}
+div[data-testid="stElementContainer"]:has(.ui-card-marker) {{ display: none; }}
 
 /* Page-level text blocks. Because of the -1rem above, each carries its own
    compensating padding-bottom so the visible spacing after it is the
@@ -561,8 +576,10 @@ div[data-testid="element-container"]:has(.ui-rhythm-marker) {{ display: none; }}
 }}
 .ui-insight-text {{ font-size: 0.95rem; line-height: 1.5; }}
 
-/* The one-time scroll-to-top helper's iframe is invisible plumbing. */
-div[data-testid="element-container"]:has(iframe[height="0"]) {{
+/* The one-time scroll-to-top helper's iframe is invisible plumbing.
+   element-container was renamed stElementContainer in Streamlit 1.6x
+   (confirmed against the 1.66.0 bundle). */
+div[data-testid="stElementContainer"]:has(iframe[height="0"]) {{
     position: absolute; height: 0; margin: 0; overflow: hidden;
 }}
 </style>
@@ -676,29 +693,44 @@ def card(level: str = "standard", height: int | None = None, rhythm: bool = Fals
     Streamlit's own markdown/heading margins neutralized, and, for
     "primary", the accent as a top border instead of a separate strip
     element (whose negative-margin math assumed Streamlit's default padding
-    and a 1rem gap). Implemented with a zero-size marker element that the
-    CSS keys on via :has() and hides (display:none, so it takes no gap).
-    `soft=True` (bordered rhythm cards only) adds a very quiet background
-    tint, for compact summary cards stacked on a page.
+    and a 1rem gap). `soft=True` (bordered rhythm cards only) adds a very
+    quiet background tint, for compact summary cards stacked on a page.
+
+    Every card, rhythm or not, gets one zero-size .ui-card-marker as its
+    own first child. Streamlit 1.6x removed the separate
+    stVerticalBlockBorderWrapper div this module used to key its structural
+    CSS (equal-height card rows, bottom-pinned last element, corner radius)
+    off of: border styling now applies directly to the same div a card's
+    content lives in, which Streamlit gives no stable name of its own to
+    select from the outside. The marker (ours, stable by construction) lets
+    _BASE_CSS's :has() rules find "the nearest ancestor of MY marker"
+    without naming anything Streamlit-internal at all, so this keeps
+    working across a Streamlit upgrade that renames its own internals
+    again. rhythm=True additionally adds .ui-rhythm-marker (and
+    .ui-rhythm-pad/-accent/-soft) for the spacing rules above; both marker
+    kinds are hidden (display:none, so neither takes a gap of its own).
     """
     container_kwargs: dict = {} if height is None else {"height": height}
     if level == "quiet":
         with st.container(border=False, **container_kwargs):
-            if rhythm:
-                st.markdown('<div class="ui-rhythm-marker"></div>', unsafe_allow_html=True)
+            rhythm_cls = " ui-rhythm-marker" if rhythm else ""
+            st.markdown(f'<div class="ui-card-marker{rhythm_cls}"></div>', unsafe_allow_html=True)
             yield
     elif level == "primary":
         with st.container(border=True, **container_kwargs):
             if rhythm:
-                st.markdown('<div class="ui-rhythm-marker ui-rhythm-pad ui-rhythm-accent"></div>', unsafe_allow_html=True)
+                st.markdown('<div class="ui-card-marker ui-rhythm-marker ui-rhythm-pad ui-rhythm-accent"></div>', unsafe_allow_html=True)
             else:
+                st.markdown('<div class="ui-card-marker"></div>', unsafe_allow_html=True)
                 st.markdown('<div class="ui-card-accent"></div>', unsafe_allow_html=True)
             yield
     else:
         with st.container(border=True, **container_kwargs):
             if rhythm:
                 soft_cls = " ui-rhythm-soft" if soft else ""
-                st.markdown(f'<div class="ui-rhythm-marker ui-rhythm-pad{soft_cls}"></div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="ui-card-marker ui-rhythm-marker ui-rhythm-pad{soft_cls}"></div>', unsafe_allow_html=True)
+            else:
+                st.markdown('<div class="ui-card-marker"></div>', unsafe_allow_html=True)
             yield
 
 
