@@ -71,9 +71,8 @@ def render_sidebar(pages: list, current_title: str | None = None) -> None:
     """
     st.sidebar.title("Marketing Intelligence Hub")
     st.sidebar.caption(
-        "Personal portfolio project. Simulated customer, ad performance, "
-        "and experiment data for a fictional brand, not an official Brio "
-        "Water or Softline application."
+        "Personal portfolio project using simulated customer, advertising, "
+        "and experiment data. Not affiliated with Brio Water."
     )
 
     active_clients = get_active_clients()

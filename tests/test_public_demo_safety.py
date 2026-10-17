@@ -72,7 +72,7 @@ def test_sidebar_renders_title_nav_and_disclaimer():
         "Experiments",
     ]
     captions = [c.value for c in at.sidebar.caption]
-    assert any("Simulated" in c and "not an official" in c for c in captions)
+    assert any("simulated" in c and "Not affiliated with Brio Water" in c for c in captions)
 
 
 def test_creative_generation_mode_defaults_to_demo_with_no_env():
